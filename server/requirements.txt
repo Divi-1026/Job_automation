@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+greenlet
+alembic
+pydantic[email]
+pydantic-settings
+python-dotenv
+passlib[bcrypt]
+python-jose
+python-multipart
+playwright
+playwright-stealth
