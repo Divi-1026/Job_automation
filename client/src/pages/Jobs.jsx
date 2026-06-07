@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchJobs, triggerScrape, clearJobs, clearScrapeMsg } from '../store/jobsSlice'
+import { fetchJobs, triggerScrape, clearJobs, clearScrapeMsg, autoApply, clearAutoApplyMsg, cancelAutoApply } from '../store/jobsSlice'
 import { logoutUser } from '../store/authSlice'
 import { useAuth } from '../store/hooks'
+import api from '../api/axiosInstance'
 import {
   Zap, ArrowLeft, User, LogOut, Building2, MapPin, DollarSign,
   ExternalLink, Bot, RefreshCw, Loader2, CheckCircle, AlertTriangle,
-  Search, Briefcase, Layers, Trash2,
+  Search, Briefcase, Layers, Trash2, X,
 } from 'lucide-react'
 
 const SOURCES = [
@@ -28,7 +29,6 @@ function JobCard({ job }) {
 
   return (
     <div className="bg-white border border-[#e2e2ed] rounded-2xl p-5 flex flex-col gap-3 hover:border-[#10B981]/50 hover:-translate-y-0.5 hover:shadow-[0_4px_24px_rgba(16,185,129,0.08)] transition-all duration-200 shadow-sm">
-      {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-base text-[#0f0f1a] leading-snug flex-1" style={{ fontFamily: 'EuclidSB, sans-serif' }}>
           {job.title}
@@ -39,14 +39,12 @@ function JobCard({ job }) {
         </span>
       </div>
 
-      {/* Meta */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6b6b80]">
         {job.company && <span className="flex items-center gap-1.5"><Building2 size={13} strokeWidth={1.75} className="text-[#a0a0b0]" />{job.company}</span>}
         {job.location && <span className="flex items-center gap-1.5"><MapPin size={13} strokeWidth={1.75} className="text-[#a0a0b0]" />{job.location}</span>}
         {job.salary && <span className="flex items-center gap-1.5"><DollarSign size={13} strokeWidth={1.75} className="text-[#a0a0b0]" />{job.salary}</span>}
       </div>
 
-      {/* Skill tag */}
       {job.skill_query && (
         <span className="self-start text-xs px-2.5 py-0.5 rounded-full bg-[#10B981]/10 border border-[#10B981]/25 text-[#059669]"
           style={{ fontFamily: 'EuclidSB, sans-serif' }}>
@@ -54,12 +52,16 @@ function JobCard({ job }) {
         </span>
       )}
 
-      {/* Description snippet */}
       {job.description && (
         <p className="text-xs text-[#a0a0b0] line-clamp-2">{job.description}</p>
       )}
 
-      {/* CTA */}
+      {job.applied && (
+        <span className="self-start text-xs px-2.5 py-0.5 rounded-full bg-green-100 border border-green-300 text-green-700">
+          Applied
+        </span>
+      )}
+
       {job.url ? (
         <a href={job.url} target="_blank" rel="noreferrer"
           className="self-start mt-auto flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#10B981]/[0.08] border border-[#10B981]/30 text-xs text-[#059669] hover:bg-[#10B981]/[0.15] transition-colors"
@@ -105,10 +107,11 @@ export default function Jobs() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { items, loading, scraping, error, scrapeMsg } = useSelector(s => s.jobs)
+  const { items, loading, scraping, error, scrapeMsg, autoApplying, autoApplyMsg, cancelling } = useSelector(s => s.jobs)
 
   const [activeSource, setActiveSource] = useState('all')
   const [pollCount, setPollCount] = useState(0)
+  const [checkingCreds, setCheckingCreds] = useState(false)
 
   useEffect(() => { dispatch(fetchJobs()) }, [dispatch])
 
@@ -119,7 +122,7 @@ export default function Jobs() {
       setPollCount(c => c + 1)
     }, 4000)
     return () => clearTimeout(t)
-  }, [scrapeMsg, pollCount, dispatch, items.length])
+  }, [scrapeMsg, pollCount, dispatch])
 
   const handleScrape = async () => {
     setPollCount(0)
@@ -128,10 +131,34 @@ export default function Jobs() {
     dispatch(fetchJobs())
   }
 
+  const checkAndAutoApply = async () => {
+    setCheckingCreds(true)
+    try {
+      const res = await api.get('/credentials/naukri')
+      if (res.data.exists) {
+        dispatch(clearAutoApplyMsg())
+        dispatch(autoApply(5))
+      } else {
+        navigate('/profile')
+      }
+    } catch (err) {
+      console.error('Failed to check credentials', err)
+      navigate('/profile')
+    } finally {
+      setCheckingCreds(false)
+    }
+  }
+
+  const handleCancelAutoApply = () => {
+    dispatch(cancelAutoApply())
+  }
+
   const handleLogout = async () => {
     await dispatch(logoutUser())
     navigate('/login')
   }
+
+  const unappliedNaukriCount = items.filter(job => !job.applied && job.source === 'naukri').length
 
   const displayed = activeSource === 'all' ? items : items.filter(j => j.source === activeSource)
   const counts = {
@@ -144,16 +171,11 @@ export default function Jobs() {
   return (
     <div className="min-h-screen bg-[#f5f5fa]" style={{ fontFamily: 'EuclidR, sans-serif' }}>
 
-      {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-[#e2e2ed] bg-white/90 backdrop-blur-md shadow-sm">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span
-              className="text-xl text-[#0f0f1a]"
-              style={{ fontFamily: 'EuclidB, sans-serif' }}
-            >
-              Carrer
-              <span className="text-[#10B981]"> Sync</span>
+            <span className="text-xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
+              Career<span className="text-[#10B981]">Sync</span>
             </span>
           </Link>
           <div className="flex items-center gap-3">
@@ -175,7 +197,6 @@ export default function Jobs() {
 
       <div className="max-w-7xl mx-auto px-6 py-10">
 
-        {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
@@ -215,7 +236,37 @@ export default function Jobs() {
           </div>
         </div>
 
-        {/* Scrape feedback banner */}
+        {/* Auto Apply / Cancel Button */}
+        {items.length > 0 && unappliedNaukriCount > 0 && (
+          <div className="mb-4 flex items-center gap-3">
+            {!autoApplying ? (
+              <button onClick={checkAndAutoApply} disabled={autoApplying || checkingCreds}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:opacity-60 text-sm"
+                style={{ fontFamily: 'EuclidSB, sans-serif' }}>
+                {(checkingCreds)
+                  ? <><Loader2 size={15} className="animate-spin" /> Checking...</>
+                  : <><Zap size={15} strokeWidth={2} /> Auto Apply ({unappliedNaukriCount})</>
+                }
+              </button>
+            ) : (
+              <button onClick={handleCancelAutoApply} disabled={cancelling}
+                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all disabled:opacity-60 text-sm"
+                style={{ fontFamily: 'EuclidSB, sans-serif' }}>
+                {cancelling
+                  ? <><Loader2 size={15} className="animate-spin" /> Cancelling...</>
+                  : <><X size={15} strokeWidth={2} /> Cancel Auto-Apply</>
+                }
+              </button>
+            )}
+            {autoApplyMsg && (
+              <div className="flex items-center gap-2 text-sm text-[#059669]">
+                <CheckCircle size={15} strokeWidth={2} />
+                {autoApplyMsg}
+              </div>
+            )}
+          </div>
+        )}
+
         {scrapeMsg && (
           <div className="mb-6 px-4 py-3 bg-[#10B981]/[0.08] border border-[#10B981]/30 rounded-xl text-sm text-[#059669] flex items-center gap-2">
             <CheckCircle size={15} strokeWidth={2} className="flex-shrink-0" />
@@ -231,7 +282,6 @@ export default function Jobs() {
           </div>
         )}
 
-        {/* Source tabs */}
         {items.length > 0 && (
           <div className="flex gap-2 mb-6 flex-wrap">
             {SOURCES.map(({ key, label, Icon }) => (
@@ -244,8 +294,7 @@ export default function Jobs() {
                 style={{ fontFamily: 'EuclidSB, sans-serif' }}>
                 <Icon size={14} strokeWidth={1.75} />
                 {label}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeSource === key ? 'bg-[#10B981]/20 text-[#059669]' : 'bg-[#f5f5fa] text-[#a0a0b0]'
-                  }`}>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeSource === key ? 'bg-[#10B981]/20 text-[#059669]' : 'bg-[#f5f5fa] text-[#a0a0b0]'}`}>
                   {counts[key]}
                 </span>
               </button>
@@ -253,7 +302,6 @@ export default function Jobs() {
           </div>
         )}
 
-        {/* Job grid / states */}
         {loading && items.length === 0 ? (
           <div className="flex justify-center py-32">
             <div className="w-10 h-10 rounded-full border-2 border-[#10B981] border-t-transparent animate-spin" />

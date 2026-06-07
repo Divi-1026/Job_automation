@@ -2,10 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAuth } from '../store/hooks'
 import { signupUser, clearError } from '../store/authSlice'
-import api from '../api/axiosInstance'
 import {
   Zap, Bot, BarChart2, Search, GraduationCap, Briefcase,
-  FileText, Upload, Lightbulb, AlertTriangle, Check, X, Eye, EyeOff,
+  Lightbulb, AlertTriangle, Check, X, Eye, EyeOff,
 } from 'lucide-react'
 
 const STEPS = ['Account', 'Profile', 'Experience', 'Skills']
@@ -15,18 +14,16 @@ const initialForm = {
   phone: '', githubId: '', linkedinId: '', portfolioUrl: '',
   location: '', experienceType: 'fresher', yearsOfExperience: '',
   currentCompany: '', currentRole: '', highestEducation: '',
-  college: '', graduationYear: '', skills: [], bio: '', resume: null,
+  college: '', graduationYear: '', skills: [], bio: '',
 }
 
 export default function Signup() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(initialForm)
   const [skillInput, setSkillInput] = useState('')
-  const [dragOver, setDragOver] = useState(false)
   const [errors, setErrors] = useState({})
   const [showPass, setShowPass] = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)
-  const fileRef = useRef()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { loading, error: apiError } = useAuth()
@@ -47,11 +44,6 @@ export default function Signup() {
     }
   }
   const removeSkill = (s) => set('skills', form.skills.filter(x => x !== s))
-
-  const handleFile = (file) => {
-    if (file && file.type === 'application/pdf') set('resume', file)
-    else setErrors(prev => ({ ...prev, resume: 'Only PDF files are accepted.' }))
-  }
 
   const validateStep = () => {
     const e = {}
@@ -76,19 +68,6 @@ export default function Signup() {
     e.preventDefault()
     if (!validateStep()) return
 
-    let resume_url = null
-    if (form.resume) {
-      try {
-        const fd = new FormData()
-        fd.append('file', form.resume)
-        const { data } = await api.post('/files/resume', fd)
-        resume_url = data.resume_url
-      } catch {
-        setErrors(prev => ({ ...prev, resume: 'Resume upload failed. Please try again.' }))
-        return
-      }
-    }
-
     const payload = {
       full_name: form.fullName,
       email: form.email,
@@ -107,7 +86,6 @@ export default function Signup() {
       college: form.college || null,
       graduation_year: form.graduationYear ? Number(form.graduationYear) : null,
       skills: form.skills,
-      resume_url,
     }
 
     const result = await dispatch(signupUser(payload))
@@ -119,14 +97,12 @@ export default function Signup() {
   return (
     <div className="flex min-h-screen bg-[#f5f5fa]" style={{ fontFamily: 'EuclidR, sans-serif' }}>
 
-      {/* ── Left Branding Panel ── */}
+      {/* Left Branding Panel - unchanged */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] min-h-screen bg-white border-r border-[#e2e2ed] px-10 py-12 relative overflow-hidden flex-shrink-0 shadow-sm">
-        {/* Brand */}
         <div className="relative z-10">
           <div className="flex items-center gap-2.5 mb-10">
             <span className="text-2xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
-              Carrer
-              <span className="text-[#10B981]"> Sync</span>
+              Career<span className="text-[#10B981]"> Sync</span>
             </span>
           </div>
           <h2 className="text-3xl text-[#0f0f1a] leading-tight mb-4" style={{ fontFamily: 'EuclidB, sans-serif' }}>
@@ -137,7 +113,6 @@ export default function Signup() {
           </p>
         </div>
 
-        {/* Feature cards */}
         <div className="flex flex-col gap-4 relative z-10">
           {[
             { Icon: Bot, title: 'Auto-Apply', desc: 'Apply to 100s of jobs in one click' },
@@ -156,12 +131,10 @@ export default function Signup() {
             </div>
           ))}
         </div>
-
-        {/* Subtle bottom glow */}
         <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-[#10B981]/[0.08] rounded-full blur-[80px] pointer-events-none" />
       </div>
 
-      {/* ── Right Form Panel ── */}
+      {/* Right Form Panel */}
       <div className="flex-1 overflow-y-auto flex items-start justify-center px-6 py-10">
         <div className="w-full max-w-[560px]">
 
@@ -171,11 +144,10 @@ export default function Signup() {
               <Zap size={15} className="text-white" strokeWidth={2.5} />
             </div>
             <span className="text-xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
-              Apply<span className="text-[#10B981]">AI</span>
+              Career<span className="text-[#10B981]"> Sync</span>
             </span>
           </div>
 
-          {/* Header */}
           <div className="mb-7">
             <h1 className="text-3xl text-[#0f0f1a] mb-1" style={{ fontFamily: 'EuclidB, sans-serif' }}>
               Create Account
@@ -211,10 +183,9 @@ export default function Signup() {
             ))}
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} noValidate>
 
-            {/* ── Step 0: Account ── */}
+            {/* Step 0: Account */}
             {step === 0 && (
               <div className="flex flex-col gap-5 animate-fade-in-up">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -247,7 +218,7 @@ export default function Signup() {
               </div>
             )}
 
-            {/* ── Step 1: Profile ── */}
+            {/* Step 1: Profile (without resume upload) */}
             {step === 1 && (
               <div className="flex flex-col gap-5 animate-fade-in-up">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -289,40 +260,11 @@ export default function Signup() {
                     value={form.bio} onChange={e => set('bio', e.target.value)}
                     className={inputCls() + ' resize-none'} />
                 </Field>
-                <Field label="Upload Resume (PDF)" error={errors.resume}>
-                  <div
-                    className={`border-2 border-dashed rounded-xl p-7 flex flex-col items-center justify-center gap-2 cursor-pointer text-center transition-all duration-200
-                      ${dragOver ? 'border-[#10B981] bg-[#10B981]/[0.06]' : 'border-[#e2e2ed] bg-[#f5f5fa]'}
-                      ${form.resume ? 'border-solid border-[#10B981] bg-[#10B981]/[0.04]' : 'hover:border-[#10B981]/60 hover:bg-[#10B981]/[0.03]'}`}
-                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
-                    onClick={() => fileRef.current.click()}
-                  >
-                    <input type="file" accept=".pdf" ref={fileRef} className="hidden"
-                      onChange={e => handleFile(e.target.files[0])} />
-                    {form.resume ? (
-                      <div className="flex items-center gap-3 text-[#059669]">
-                        <FileText size={22} strokeWidth={1.75} />
-                        <span className="text-sm" style={{ fontFamily: 'EuclidSB, sans-serif' }}>{form.resume.name}</span>
-                        <button type="button" onClick={e => { e.stopPropagation(); set('resume', null) }}
-                          className="text-[#a0a0b0] hover:text-[#ef4444] transition-colors p-0.5">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <Upload size={22} className="text-[#a0a0b0]" strokeWidth={1.5} />
-                        <p className="text-sm text-[#6b6b80]">Drag & drop your resume or <u>browse</u></p>
-                        <p className="text-xs text-[#a0a0b0]">PDF only · Max 5MB</p>
-                      </>
-                    )}
-                  </div>
-                </Field>
+                {/* Resume upload removed – now only in Profile page */}
               </div>
             )}
 
-            {/* ── Step 2: Experience ── */}
+            {/* Step 2: Experience - unchanged */}
             {step === 2 && (
               <div className="flex flex-col gap-5 animate-fade-in-up">
                 <Field label="I am a...">
@@ -388,7 +330,7 @@ export default function Signup() {
               </div>
             )}
 
-            {/* ── Step 3: Skills ── */}
+            {/* Step 3: Skills - unchanged */}
             {step === 3 && (
               <div className="flex flex-col gap-5 animate-fade-in-up">
                 <div className="flex items-center gap-3 px-4 py-3 bg-[#10B981]/[0.07] border border-[#10B981]/25 rounded-lg text-sm text-[#059669]">
@@ -436,11 +378,11 @@ export default function Signup() {
             {/* API error banner */}
             {apiError && (
               <div className="mt-5 px-4 py-3 bg-[#ef4444]/[0.08] border border-[#ef4444]/30 rounded-lg text-sm text-[#ef4444] flex items-center gap-2">
-                <span>⚠</span> {apiError}
+                <AlertTriangle size={15} strokeWidth={2} /> {apiError}
               </div>
             )}
 
-            {/* Navigation */}
+            {/* Navigation buttons */}
             <div className="flex justify-end gap-3 mt-8">
               {step > 0 && (
                 <button type="button" onClick={prev}
@@ -470,6 +412,7 @@ export default function Signup() {
   )
 }
 
+// Helper components (unchanged)
 const inputCls = (err) =>
   `w-full px-3.5 py-3 bg-white border rounded-lg text-sm text-[#0f0f1a] placeholder-[#a0a0b0] outline-none transition-all duration-200 ${err
     ? 'border-[#ef4444] shadow-[0_0_0_3px_rgba(239,68,68,0.1)]'
@@ -487,7 +430,7 @@ function PasswordInput({ value, onChange, show, toggleShow, placeholder, hasErro
         className={inputCls(hasError) + ' pr-11'} />
       <button type="button" onClick={toggleShow}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-base text-[#a0a0b0] hover:text-[#6b6b80] transition-colors">
-        {show ? (<EyeOff size={20} />) : (<Eye size={20} />)}
+        {show ? <EyeOff size={20} /> : <Eye size={20} />}
       </button>
     </div>
   )

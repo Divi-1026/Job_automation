@@ -7,7 +7,6 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserSignup, UserOut, TokenOut, UserLogin
 from app.core.security import hash_password, verify_password, create_access_token
-from app.routers.jobs import start_user_scraper, stop_user_scraper
 from app.routers.users import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -45,7 +44,6 @@ async def signup(
         college=payload.college,
         graduation_year=payload.graduation_year,
         skills=payload.skills,
-        resume_url=payload.resume_url,
     )
     db.add(user)
     await db.flush()   # get the generated UUID without committing yet
@@ -53,7 +51,6 @@ async def signup(
     await db.commit()  # commit NOW so the background task can find the user in DB
 
     token = create_access_token({"sub": str(user.id)})
-    start_user_scraper(user.id)  # begin continuous scraping loop
     return TokenOut(access_token=token, user=UserOut.model_validate(user))
 
 
@@ -71,7 +68,6 @@ async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)):
         )
 
     token = create_access_token({"sub": str(user.id)})
-    start_user_scraper(user.id)  # begin continuous scraping loop
     return TokenOut(access_token=token, user=UserOut.model_validate(user))
 
 
@@ -79,7 +75,6 @@ async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)):
 @router.post("/logout", status_code=200)
 async def logout_user(current_user: User = Depends(get_current_user)):
     """Stop the background scraping loop and invalidate the session server-side."""
-    stop_user_scraper(current_user.id)
     return {"message": "Logged out successfully."}
 
 
@@ -96,5 +91,4 @@ async def login_form(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     token = create_access_token({"sub": str(user.id)})
-    start_user_scraper(user.id)
     return TokenOut(access_token=token, user=UserOut.model_validate(user))

@@ -42,9 +42,9 @@ export default function Login() {
       <div className="hidden lg:flex flex-col justify-between w-[420px] min-h-screen bg-white border-r border-[#e2e2ed] px-10 py-12 relative overflow-hidden flex-shrink-0 shadow-sm">
         <div className="relative z-10">
           <div className="flex items-center gap-2.5 mb-10">
-            <span className="text-xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
-              AI Assisted:
-              <span className="text-[#10B981]"> Job Application and Automation System</span>
+            <span className="text-2xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
+              Career
+              <span className="text-[#10B981]">Sync</span>
             </span>
           </div>
           <h2 className="text-2xl text-[#0f0f1a] leading-tight mb-4" style={{ fontFamily: 'EuclidB, sans-serif' }}>

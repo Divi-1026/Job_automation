@@ -63,8 +63,8 @@ export default function Support() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
           <Link to="/dashboard" className="flex items-center gap-2">
             <span className="text-xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
-              AI Assisted:
-              <span className="text-[#10B981]"> Job Application and Automation System</span>
+              Career
+              <span className="text-[#10B981]">Sync</span>
             </span>
           </Link>
           <div className="flex items-center gap-4 text-sm">

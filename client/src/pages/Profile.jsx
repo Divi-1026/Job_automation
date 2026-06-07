@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAuth } from '../store/hooks'
 import {
   updateProfile, changePassword,
   uploadResume, deleteResume, logoutUser,
 } from '../store/authSlice'
+import api from '../api/axiosInstance'  // <-- import api for credentials
 import {
   Zap, ArrowLeft, LogOut, Link2, MapPin, Github, Linkedin, Globe,
   Briefcase, GraduationCap, Wrench, FileText, Upload, Lock,
@@ -73,12 +74,34 @@ export default function Profile() {
   const [passSuccess, setPassSuccess] = useState('')
   const [sectionError, setSectionError] = useState({})
 
+  // Naukri credentials state
+  const [naukriEmail, setNaukriEmail] = useState('')
+  const [naukriPassword, setNaukriPassword] = useState('')
+  const [credSaved, setCredSaved] = useState(false)
+  const [loadingCred, setLoadingCred] = useState(false)
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const flashSuccess = (setter, msg) => {
     setter(msg)
     setTimeout(() => setter(''), 3500)
   }
+
+  // Fetch existing Naukri credentials on mount
+  useEffect(() => {
+    const fetchCredentials = async () => {
+      try {
+        const res = await api.get('/credentials/naukri')
+        if (res.data.exists) {
+          setNaukriEmail(res.data.email)
+          setCredSaved(true)
+        }
+      } catch (err) {
+        console.error('Failed to fetch credentials:', err)
+      }
+    }
+    fetchCredentials()
+  }, [])
 
   const addSkill = (e) => {
     if (e.key === 'Enter' || e.key === ',') {
@@ -164,19 +187,32 @@ export default function Profile() {
     navigate('/login')
   }
 
+  const handleSaveCredentials = async (e) => {
+    e.preventDefault()
+    setLoadingCred(true)
+    try {
+      await api.post('/credentials/naukri', {
+        platform: 'naukri',
+        email: naukriEmail,
+        password: naukriPassword
+      })
+      setCredSaved(true)
+      flashSuccess(setSuccessMsg, 'Naukri credentials saved successfully!')
+    } catch (err) {
+      setSectionError(prev => ({ ...prev, cred: err.response?.data?.detail || 'Failed to save credentials' }))
+    } finally {
+      setLoadingCred(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f5fa]" style={{ fontFamily: 'EuclidR, sans-serif' }}>
 
-      {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-[#e2e2ed] bg-white/90 backdrop-blur-md shadow-sm">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span
-              className="text-xl text-[#0f0f1a]"
-              style={{ fontFamily: 'EuclidB, sans-serif' }}
-            >
-              Carrer
-              <span className="text-[#10B981]">Sync </span>
+            <span className="text-xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
+              Carrer<span className="text-[#10B981]">Sync </span>
             </span>
           </Link>
           <div className="flex items-center gap-3">
@@ -194,7 +230,6 @@ export default function Profile() {
 
       <div className="max-w-3xl mx-auto px-6 py-12 flex flex-col gap-6">
 
-        {/* Page header */}
         <div className="flex items-center gap-4 mb-2">
           <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center text-2xl text-white flex-shrink-0"
             style={{ fontFamily: 'EuclidB, sans-serif' }}>
@@ -211,7 +246,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Global success banner */}
         {successMsg && (
           <div className="px-4 py-3 bg-[#10B981]/[0.08] border border-[#10B981]/30 rounded-lg text-sm text-[#059669] flex items-center gap-2">
             <CheckCircle size={15} strokeWidth={2} className="flex-shrink-0" /> {successMsg}
@@ -219,8 +253,6 @@ export default function Profile() {
         )}
 
         <form onSubmit={handleSave} className="flex flex-col gap-6">
-
-          {/* Contact & Social */}
           <Section title="Contact & Social" Icon={Link2}>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Phone">
@@ -268,7 +300,6 @@ export default function Profile() {
             </Field>
           </Section>
 
-          {/* Experience */}
           <Section title="Experience" Icon={Briefcase}>
             <div className="flex gap-3">
               {[
@@ -307,7 +338,6 @@ export default function Profile() {
             )}
           </Section>
 
-          {/* Education */}
           <Section title="Education" Icon={GraduationCap}>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Highest Education">
@@ -328,7 +358,6 @@ export default function Profile() {
             </div>
           </Section>
 
-          {/* Skills */}
           <Section title="Skills" Icon={Wrench}>
             <div className="flex flex-wrap gap-2 p-3 bg-white border border-[#e2e2ed] rounded-lg focus-within:border-[#10B981] focus-within:shadow-[0_0_0_3px_rgba(16,185,129,0.12)] transition-all duration-200 min-h-[48px] items-center">
               {form.skills.map(s => (
@@ -351,7 +380,6 @@ export default function Profile() {
             </div>
           </Section>
 
-          {/* Profile error */}
           {sectionError.profile && (
             <div className="px-4 py-3 bg-[#ef4444]/[0.07] border border-[#ef4444]/30 rounded-lg text-sm text-[#ef4444] flex items-center gap-2">
               <AlertTriangle size={15} strokeWidth={2} className="flex-shrink-0" /> {sectionError.profile}
@@ -368,7 +396,6 @@ export default function Profile() {
           </button>
         </form>
 
-        {/* Resume */}
         <Section title="Resume" Icon={FileText}>
           {user?.resume_url ? (
             <div className="flex items-center justify-between gap-4 p-4 bg-[#f5f5fa] border border-[#e2e2ed] rounded-xl">
@@ -415,7 +442,37 @@ export default function Profile() {
           )}
         </Section>
 
-        {/* Change Password */}
+        {/* Naukri Credentials Section */}
+        <Section title="Naukri Automation Credentials" Icon={Lock}>
+          <form onSubmit={handleSaveCredentials} className="flex flex-col gap-4">
+            <Field label="Naukri Email">
+              <input type="email" placeholder="your.email@example.com"
+                value={naukriEmail} onChange={e => setNaukriEmail(e.target.value)}
+                className={inputCls()} />
+            </Field>
+            <Field label="Naukri Password">
+              <input type="password" placeholder="Your Naukri password"
+                value={naukriPassword} onChange={e => setNaukriPassword(e.target.value)}
+                className={inputCls()} />
+            </Field>
+            {sectionError.cred && (
+              <p className="flex items-center gap-1 text-xs text-[#ef4444]">
+                <AlertTriangle size={11} strokeWidth={2} /> {sectionError.cred}
+              </p>
+            )}
+            <button type="submit" disabled={loadingCred}
+              className="self-start px-6 py-2.5 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#0ea572] transition-all disabled:opacity-60"
+              style={{ fontFamily: 'EuclidSB, sans-serif' }}>
+              {loadingCred ? 'Saving...' : 'Save Credentials'}
+            </button>
+            {credSaved && (
+              <p className="text-xs text-[#059669] flex items-center gap-1">
+                <CheckCircle size={12} /> Credentials saved
+              </p>
+            )}
+          </form>
+        </Section>
+
         <Section title="Change Password" Icon={Lock}>
           <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
             <Field label="Current Password" error={passErrors.current_password}>
@@ -457,7 +514,6 @@ export default function Profile() {
           </form>
         </Section>
 
-        {/* Danger Zone */}
         <Section title="Danger Zone" Icon={AlertTriangle}>
           <p className="text-sm text-[#6b6b80]">
             Deactivating your account will sign you out and prevent future logins.

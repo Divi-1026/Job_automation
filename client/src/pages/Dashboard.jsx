@@ -105,7 +105,7 @@ export default function Dashboard() {
               className="text-xl text-[#0f0f1a]"
               style={{ fontFamily: 'EuclidB, sans-serif' }}
             >
-              Carrer
+              Career
               <span className="text-[#10B981]">Sync</span>
             </span>
           </div>

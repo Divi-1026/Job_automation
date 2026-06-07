@@ -14,6 +14,7 @@ DELETE /profile/me            → soft-delete / deactivate account
 
 import os
 import uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update as sql_update
@@ -22,14 +23,14 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserOut, ProfileUpdate, PasswordChange, EmailChange
 from app.core.security import hash_password, verify_password
-from app.routers.users import get_current_user   # reuse shared auth dependency
-from app.routers.jobs import start_user_scraper
+from app.routers.users import get_current_user
+
+logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "resumes")
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
-
 
 # ── GET /profile/me ──────────────────────────────────────────────────────────
 @router.get("/me", response_model=UserOut, summary="Get my profile")
@@ -67,9 +68,6 @@ async def update_profile(
     )
     await db.refresh(current_user)
 
-    # Restart the scraper whenever skills change so it picks up the new list immediately
-    if "skills" in update_data:
-        start_user_scraper(current_user.id)
 
     return current_user
 
@@ -147,7 +145,6 @@ async def deactivate_account(
     return {"message": "Account deactivated. You have been signed out."}
 
 
-# ── POST /profile/me/resume ───────────────────────────────────────────────────
 @router.post("/me/resume", response_model=UserOut, summary="Upload or replace resume")
 async def upload_resume(
     file: UploadFile = File(...),
@@ -156,9 +153,9 @@ async def upload_resume(
 ):
     """
     Upload a new resume PDF.
-    - Validates file type (PDF only) and size (≤ 10 MB).
-    - Deletes the old resume file from disk if one exists.
-    - Saves the new file and updates resume_url on the profile.
+    - Saves the file.
+    - Extracts text and uses Gemini API to get technical skills.
+    - Merges new skills with existing user skills and updates DB.
     """
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
@@ -167,9 +164,8 @@ async def upload_resume(
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail="File too large. Maximum size is 10 MB.")
 
+    # 1. Save file
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-    # Delete the old resume file if it exists
     if current_user.resume_url:
         old_filename = current_user.resume_url.lstrip("/").replace("uploads/resumes/", "")
         old_path = os.path.join(UPLOAD_DIR, old_filename)
@@ -181,12 +177,28 @@ async def upload_resume(
     with open(file_path, "wb") as f:
         f.write(content)
 
+    # 2. Extract skills from resume
+    from app.utils.resume_processor import extract_text_from_pdf, extract_skills_from_text, merge_skills
+
+    try:
+        resume_text = extract_text_from_pdf(content)
+        if resume_text:
+            new_skills = extract_skills_from_text(resume_text)
+            if new_skills:
+                current_skills = current_user.skills or []
+                merged = merge_skills(current_skills, new_skills)
+                current_user.skills = merged
+                logger.info(f"Added {len(new_skills)} skills from resume for user {current_user.id}")
+    except Exception as e:
+        logger.error(f"Resume parsing failed: {e}", exc_info=True)
+        # Do not fail the whole request – just log and continue
+
+    # 3. Update resume_url
     current_user.resume_url = f"/uploads/resumes/{filename}"
     db.add(current_user)
     await db.flush()
     await db.refresh(current_user)
     return current_user
-
 
 # ── DELETE /profile/me/resume ─────────────────────────────────────────────────
 @router.delete("/me/resume", response_model=UserOut, summary="Remove resume")

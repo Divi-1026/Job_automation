@@ -26,7 +26,6 @@ class UserSignup(BaseModel):
     college: Optional[str] = None
     graduation_year: Optional[int] = None
     skills: List[str] = []
-    resume_url: Optional[str] = None
 
     @field_validator("password")
     @classmethod
