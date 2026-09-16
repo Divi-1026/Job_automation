@@ -1,0 +1,20 @@
+CareerSync Semantic Autofill V2
+
+Replace:
+1) server/app/routers/extension.py
+2) extension/background.js
+3) extension/content/content.js
+
+Then restart backend and reload Chrome extension.
+
+Flow:
+Saved Extension Profile -> Learned Memory -> AI semantic matching for EVERY unresolved form field -> Ask user only if no safe supported answer exists.
+
+Examples that should reuse the same saved profile value:
+Name / Your name / Provide your name / Applicant name / Candidate name -> fullName
+Branch / Major / Specialization / Field of Study / Discipline -> branch
+Phone / Mobile / Contact Number / Telephone -> phone
+Degree / Qualification / Program / Course -> degree/highest qualification based on context
+
+AI requests are sent in batches of 12 fields to make large ATS forms more reliable.
+No auto-submit is performed.

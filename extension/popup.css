@@ -1,0 +1,187 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.container {
+  width: 340px;
+  min-height: 260px;
+  padding: 18px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.header p {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* Startup auto-connect loader */
+.connection-loader {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.connection-loader p {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #dbeafe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status {
+  padding: 9px 12px;
+  border-radius: 7px;
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.connected {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.disconnected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.section {
+  background: white;
+  padding: 14px;
+  border-radius: 9px;
+  border: 1px solid #e5e7eb;
+}
+
+.section h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #2563eb;
+}
+
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+button:hover {
+  opacity: 0.92;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: #374151;
+}
+
+.profile-box {
+  margin-top: 14px;
+  background: white;
+  padding: 14px;
+  border-radius: 9px;
+  border: 1px solid #e5e7eb;
+}
+
+.profile-box h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.profile-row {
+  margin-bottom: 9px;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.profile-row .label {
+  display: block;
+  font-weight: 700;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.message {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  min-height: 15px;
+}
+
+.message.error {
+  color: #b91c1c;
+}
+
+.message.success {
+  color: #15803d;
+}
+
+.hidden {
+  display: none !important;
+}

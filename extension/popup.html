@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareerSync Autofill</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>CareerSync</h1>
+      <p>Job Application Autofill</p>
+    </div>
+
+    <!-- STARTUP / AUTO-CONNECT LOADER -->
+    <div id="connectionLoader" class="connection-loader">
+      <div class="spinner"></div>
+      <p>Connecting to CareerSync...</p>
+    </div>
+
+    <div id="statusBox" class="status disconnected hidden">
+      Not connected
+    </div>
+
+    <!-- LOGIN SECTION -->
+    <div id="loginSection" class="section hidden">
+      <h2>Connect CareerSync</h2>
+
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        placeholder="Enter CareerSync email"
+        autocomplete="email"
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        placeholder="Enter CareerSync password"
+        autocomplete="current-password"
+      />
+
+      <button id="loginBtn">
+        Connect
+      </button>
+    </div>
+
+    <!-- CONNECTED SECTION -->
+    <div id="connectedSection" class="section hidden">
+
+      <button id="autofillBtn">
+        Autofill This Form
+      </button>
+
+      <button id="profileBtn">
+        Load CareerSync Profile
+      </button>
+
+      <button id="logoutBtn" class="secondary-button">
+        Disconnect
+      </button>
+
+    </div>
+
+    <!-- PROFILE SECTION -->
+    <div id="profileBox" class="profile-box hidden">
+
+      <h2>CareerSync Profile</h2>
+
+      <div class="profile-row">
+        <span class="label">Name</span>
+        <span id="profileName">-</span>
+      </div>
+
+      <div class="profile-row">
+        <span class="label">Email</span>
+        <span id="profileEmail">-</span>
+      </div>
+
+      <div class="profile-row">
+        <span class="label">Phone</span>
+        <span id="profilePhone">-</span>
+      </div>
+
+      <div class="profile-row">
+        <span class="label">College</span>
+        <span id="profileCollege">-</span>
+      </div>
+
+      <div class="profile-row">
+        <span class="label">Degree</span>
+        <span id="profileDegree">-</span>
+      </div>
+
+      <div class="profile-row">
+        <span class="label">Skills</span>
+        <span id="profileSkills">-</span>
+      </div>
+
+      <div class="profile-row">
+        <span class="label">Resume</span>
+        <span id="profileResume">-</span>
+      </div>
+
+    </div>
+
+    <div id="message" class="message"></div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

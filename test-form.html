@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>CareerSync - Large Job Application Test</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .page-header {
+      background: #111827;
+      color: white;
+      padding: 22px;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .page-header p {
+      margin: 7px 0 0;
+      color: #d1d5db;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px 50px;
+    }
+
+    .job-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .job-card h2 {
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+
+    .job-card p {
+      color: #6b7280;
+      margin-top: 5px;
+    }
+
+    .section {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .section h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 19px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 12px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .required {
+      color: #dc2626;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 14px;
+      background: white;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .radio-group,
+    .checkbox-group {
+      padding-top: 4px;
+    }
+
+    .radio-option,
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .radio-option input,
+    .checkbox-option input {
+      width: auto;
+    }
+
+    .help {
+      margin-top: 5px;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      background: #111827;
+      color: white;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      background: #1f2937;
+    }
+
+    @media (max-width: 700px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-header">
+    <h1>Software Development Engineer Application</h1>
+    <p>
+      CareerSync Autofill Stress Test — Large Job Application Form
+    </p>
+  </div>
+
+  <div class="container">
+
+    <div class="job-card">
+      <h2>Software Development Engineer</h2>
+      <p>
+        Example Tech Company · Bengaluru, Karnataka · Full Time
+      </p>
+    </div>
+
+    <form>
+
+      <!-- ================================================== -->
+      <!-- PERSONAL INFORMATION -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Personal Information</h3>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="firstName">
+              First Name
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="firstName"
+              name="firstName"
+              type="text"
+              placeholder="Enter first name"
+              autocomplete="given-name"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="lastName">
+              Last Name
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="lastName"
+              name="lastName"
+              type="text"
+              placeholder="Enter last name"
+              autocomplete="family-name"
+              required
+            />
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label for="fullName">
+            Full Legal Name
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="fullName"
+            name="fullName"
+            type="text"
+            placeholder="Full name as per official documents"
+            required
+          />
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="email">
+              Email Address
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="example@email.com"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="phone">
+              Mobile Number
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              autocomplete="tel"
+              placeholder="+91"
+              required
+            />
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="dob">
+              Date of Birth
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="dob"
+              name="dateOfBirth"
+              type="date"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="gender">
+              Gender
+            </label>
+
+            <select
+              id="gender"
+              name="gender"
+            >
+              <option value="">
+                Select
+              </option>
+
+              <option value="female">
+                Female
+              </option>
+
+              <option value="male">
+                Male
+              </option>
+
+              <option value="other">
+                Other
+              </option>
+
+              <option value="prefer_not">
+                Prefer not to say
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- CONTACT / LOCATION -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Address & Location</h3>
+
+        <div class="field">
+          <label for="address">
+            Current Address
+          </label>
+
+          <textarea
+            id="address"
+            name="currentAddress"
+            placeholder="House number, street, locality"
+          ></textarea>
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="city">
+              Current City
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="city"
+              name="currentCity"
+              type="text"
+              placeholder="City"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="state">
+              State
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="state"
+              name="state"
+              type="text"
+              placeholder="State"
+              required
+            />
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="country">
+              Country
+              <span class="required">*</span>
+            </label>
+
+            <select
+              id="country"
+              name="country"
+              required
+            >
+              <option value="">
+                Select country
+              </option>
+
+              <option value="India">
+                India
+              </option>
+
+              <option value="United States">
+                United States
+              </option>
+
+              <option value="United Kingdom">
+                United Kingdom
+              </option>
+
+              <option value="Canada">
+                Canada
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="pincode">
+              Postal / PIN Code
+            </label>
+
+            <input
+              id="pincode"
+              name="pincode"
+              type="text"
+              placeholder="Postal code"
+            />
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- ONLINE PROFILES -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Online Profiles</h3>
+
+        <div class="field">
+          <label for="linkedin">
+            LinkedIn Profile URL
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="linkedin"
+            name="linkedin"
+            type="url"
+            placeholder="https://linkedin.com/in/..."
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="github">
+            GitHub Profile
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="github"
+            name="github"
+            type="url"
+            placeholder="https://github.com/..."
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="portfolio">
+            Portfolio / Personal Website
+          </label>
+
+          <input
+            id="portfolio"
+            name="portfolio"
+            type="url"
+            placeholder="https://..."
+          />
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- EDUCATION -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Education</h3>
+
+        <div class="field">
+          <label for="highestQualification">
+            Highest Qualification
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="highestQualification"
+            name="highestQualification"
+            required
+          >
+            <option value="">
+              Select qualification
+            </option>
+
+            <option value="B.Tech">
+              B.Tech
+            </option>
+
+            <option value="B.E.">
+              B.E.
+            </option>
+
+            <option value="BCA">
+              BCA
+            </option>
+
+            <option value="M.Tech">
+              M.Tech
+            </option>
+
+            <option value="MCA">
+              MCA
+            </option>
+
+            <option value="Other">
+              Other
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="college">
+            College / University Name
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="college"
+            name="college"
+            type="text"
+            placeholder="College name"
+            required
+          />
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="degree">
+              Degree
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="degree"
+              name="degree"
+              type="text"
+              placeholder="B.Tech"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="branch">
+              Branch / Specialization
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="branch"
+              name="branch"
+              type="text"
+              placeholder="Information Technology"
+              required
+            />
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="graduationYear">
+              Year of Graduation
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="graduationYear"
+              name="graduationYear"
+              type="number"
+              placeholder="2027"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="cgpa">
+              CGPA
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="cgpa"
+              name="cgpa"
+              type="number"
+              step="0.01"
+              placeholder="Example: 9.63"
+              required
+            />
+          </div>
+
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="class12">
+              Class 12 Percentage
+            </label>
+
+            <input
+              id="class12"
+              name="class12Percentage"
+              type="number"
+              step="0.01"
+              placeholder="Percentage"
+            />
+          </div>
+
+          <div class="field">
+            <label for="class10">
+              Class 10 Percentage
+            </label>
+
+            <input
+              id="class10"
+              name="class10Percentage"
+              type="number"
+              step="0.01"
+              placeholder="Percentage"
+            />
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- EXPERIENCE -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Professional Experience</h3>
+
+        <div class="field">
+          <label for="experienceType">
+            Experience Level
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="experienceType"
+            name="experienceType"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="fresher">
+              Fresher
+            </option>
+
+            <option value="experienced">
+              Experienced
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="yearsExperience">
+            Total Years of Experience
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="yearsExperience"
+            name="yearsOfExperience"
+            type="number"
+            step="0.1"
+            placeholder="Example: 0"
+            required
+          />
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="currentCompany">
+              Current / Most Recent Company
+            </label>
+
+            <input
+              id="currentCompany"
+              name="currentCompany"
+              type="text"
+              placeholder="Company name"
+            />
+          </div>
+
+          <div class="field">
+            <label for="currentRole">
+              Current / Most Recent Role
+            </label>
+
+            <input
+              id="currentRole"
+              name="currentRole"
+              type="text"
+              placeholder="Role"
+            />
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label for="internshipCompany">
+            Internship Company
+          </label>
+
+          <input
+            id="internshipCompany"
+            name="internshipCompany"
+            type="text"
+            placeholder="Company name"
+          />
+        </div>
+
+        <div class="field">
+          <label for="experienceDescription">
+            Briefly describe your relevant experience
+            <span class="required">*</span>
+          </label>
+
+          <textarea
+            id="experienceDescription"
+            name="experienceDescription"
+            placeholder="Describe your internships, work experience or relevant projects"
+            required
+          ></textarea>
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- SKILLS -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Skills & Technical Background</h3>
+
+        <div class="field">
+          <label for="skills">
+            Technical Skills
+            <span class="required">*</span>
+          </label>
+
+          <textarea
+            id="skills"
+            name="technicalSkills"
+            placeholder="C++, Python, React, Node.js..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="preferredRole">
+            Preferred Role
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="preferredRole"
+            name="preferredRole"
+            type="text"
+            placeholder="Software Engineer"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="strongestLanguage">
+            Strongest Programming Language
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="strongestLanguage"
+            name="strongestProgrammingLanguage"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="C++">
+              C++
+            </option>
+
+            <option value="Java">
+              Java
+            </option>
+
+            <option value="Python">
+              Python
+            </option>
+
+            <option value="JavaScript">
+              JavaScript
+            </option>
+          </select>
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- JOB PREFERENCES -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Job Preferences</h3>
+
+        <div class="field">
+          <label for="relocate">
+            Are you willing to relocate?
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="relocate"
+            name="willingToRelocate"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="Yes">
+              Yes
+            </option>
+
+            <option value="No">
+              No
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="preferredLocation">
+            Preferred Work Location
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="preferredLocation"
+            name="preferredLocation"
+            type="text"
+            placeholder="Example: Bengaluru"
+            required
+          />
+        </div>
+
+        <div class="row">
+
+          <div class="field">
+            <label for="expectedCTC">
+              Expected Annual CTC
+              <span class="required">*</span>
+            </label>
+
+            <input
+              id="expectedCTC"
+              name="expectedCTC"
+              type="text"
+              placeholder="Example: 8 LPA"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="noticePeriod">
+              Notice Period
+              <span class="required">*</span>
+            </label>
+
+            <select
+              id="noticePeriod"
+              name="noticePeriod"
+              required
+            >
+              <option value="">
+                Select
+              </option>
+
+              <option value="Immediate">
+                Immediate
+              </option>
+
+              <option value="15 Days">
+                15 Days
+              </option>
+
+              <option value="30 Days">
+                30 Days
+              </option>
+
+              <option value="60 Days">
+                60 Days
+              </option>
+
+              <option value="90 Days">
+                90 Days
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- WORK AUTHORIZATION -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Work Authorization</h3>
+
+        <div class="field">
+          <label for="workAuthorization">
+            Are you legally authorized to work in India?
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="workAuthorization"
+            name="workAuthorizationIndia"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="Yes">
+              Yes
+            </option>
+
+            <option value="No">
+              No
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sponsorship">
+            Will you now or in the future require employment visa sponsorship?
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="sponsorship"
+            name="visaSponsorship"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="Yes">
+              Yes
+            </option>
+
+            <option value="No">
+              No
+            </option>
+          </select>
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- CUSTOM QUESTIONS -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Additional Questions</h3>
+
+        <div class="field">
+          <label for="drivingLicence">
+            Do you have a valid driving licence?
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="drivingLicence"
+            name="drivingLicence"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="Yes">
+              Yes
+            </option>
+
+            <option value="No">
+              No
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="weekend">
+            Are you comfortable working on weekends if required?
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="weekend"
+            name="weekendAvailability"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="Yes">
+              Yes
+            </option>
+
+            <option value="No">
+              No
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="shifts">
+            Are you comfortable working in rotational shifts?
+            <span class="required">*</span>
+          </label>
+
+          <select
+            id="shifts"
+            name="rotationalShift"
+            required
+          >
+            <option value="">
+              Select
+            </option>
+
+            <option value="Yes">
+              Yes
+            </option>
+
+            <option value="No">
+              No
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="whyCompany">
+            Why do you want to join our company?
+            <span class="required">*</span>
+          </label>
+
+          <textarea
+            id="whyCompany"
+            name="whyCompany"
+            placeholder="Write your answer"
+            required
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="challenge">
+            Describe a challenging technical problem you solved.
+            <span class="required">*</span>
+          </label>
+
+          <textarea
+            id="challenge"
+            name="technicalChallenge"
+            placeholder="Describe the problem and your solution"
+            required
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="strength">
+            What is your greatest professional strength?
+            <span class="required">*</span>
+          </label>
+
+          <input
+            id="strength"
+            name="professionalStrength"
+            type="text"
+            required
+          />
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- CONSENT -->
+      <!-- ================================================== -->
+
+      <section class="section">
+        <h3>Declarations</h3>
+
+        <div class="checkbox-group">
+
+          <label class="checkbox-option">
+            <input
+              type="checkbox"
+              id="accuracy"
+              name="informationAccurate"
+              required
+            />
+
+            I confirm that the information provided in this application is accurate.
+          </label>
+
+          <label class="checkbox-option">
+            <input
+              type="checkbox"
+              id="privacy"
+              name="privacyConsent"
+              required
+            />
+
+            I agree to the processing of my personal information for recruitment purposes.
+          </label>
+
+          <label class="checkbox-option">
+            <input
+              type="checkbox"
+              id="contactConsent"
+              name="contactConsent"
+            />
+
+            I agree to receive recruitment-related communications.
+          </label>
+
+        </div>
+
+      </section>
+
+
+      <!-- ================================================== -->
+      <!-- SUBMIT -->
+      <!-- ================================================== -->
+
+      <button
+        type="button"
+        class="submit-btn"
+      >
+        Submit Application
+      </button>
+
+    </form>
+
+  </div>
+
+</body>
+</html>

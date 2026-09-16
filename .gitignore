@@ -1,0 +1,44 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+
+# Node
+node_modules/
+client/node_modules/
+client/dist/
+client/build/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# User uploaded resumes - personal data
+server/uploads/resumes/
+server/uploads/**/*.pdf
+
+# Celery runtime files
+celerybeat-schedule
+celerybeat-schedule.*
+server/celerybeat-schedule
+server/celerybeat-schedule.*
+
+# Logs / cache
+*.log
+.pytest_cache/
+.cache/
+
+# Generated archives
+extension.zip
+
+# Temporary/local files
+server/command.txt

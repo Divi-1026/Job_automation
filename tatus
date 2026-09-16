@@ -1,0 +1,24 @@
+[35mserver/app/core/config.py[m[36m:[m[32m6[m[36m:[m    [1;31mDATABASE_URL[m: str
+[35mserver/app/core/config.py[m[36m:[m[32m9[m[36m:[m    [1;31mSECRET_KEY[m: str
+[35mserver/app/core/config.py[m[36m:[m[32m14[m[36m:[m    [1;31mFERNET_KEY[m: str
+[35mserver/app/core/config.py[m[36m:[m[32m21[m[36m:[m    [1;31mGROQ_API_KEY[m: str | None = None
+[35mserver/app/core/security.py[m[36m:[m[32m78[m[36m:[m        settings.[1;31mSECRET_KEY[m,
+[35mserver/app/core/security.py[m[36m:[m[32m100[m[36m:[m            settings.[1;31mSECRET_KEY[m,
+[35mserver/app/database.py[m[36m:[m[32m29[m[36m:[m    settings.[1;31mDATABASE_URL[m,
+[35mserver/app/routers/credentials.py[m[36m:[m[32m42[m[36m:[m    Fallback uses the same [1;31mFERNET_KEY[m directly.
+[35mserver/app/routers/credentials.py[m[36m:[m[32m48[m[36m:[m        key = os.getenv("[1;31mFERNET_KEY[m")
+[35mserver/app/routers/credentials.py[m[36m:[m[32m53[m[36m:[m                detail="[1;31mFERNET_KEY[m is not configured on the server.",
+[35mserver/app/scrapers/naukri.py[m[36m:[m[32m56[m[36m:[m# [1;31mapi_key[m = settings.[1;31mGROQ_API_KEY[m
+[35mserver/app/scrapers/naukri.py[m[36m:[m[32m98[m[36m:[mdef _[1;31mgroq_api_key[m():
+[35mserver/app/scrapers/naukri.py[m[36m:[m[32m102[m[36m:[m        if settings.[1;31mGROQ_API_KEY[m:
+[35mserver/app/scrapers/naukri.py[m[36m:[m[32m103[m[36m:[m            return settings.[1;31mGROQ_API_KEY[m
+[35mserver/app/scrapers/naukri.py[m[36m:[m[32m107[m[36m:[m    return os.getenv("[1;31mGROQ_API_KEY[m")
+[35mserver/app/scrapers/naukri.py[m[36m:[m[32m108[m[36m:[m[1;31mapi_key[m = _[1;31mgroq_api_key[m()
+[35mserver/app/utils/encryption.py[m[36m:[m[32m9[m[36m:[m[1;31mFERNET_KEY[m = settings.[1;31mFERNET_KEY[m
+[35mserver/app/utils/encryption.py[m[36m:[m[32m12[m[36m:[mif not [1;31mFERNET_KEY[m:
+[35mserver/app/utils/encryption.py[m[36m:[m[32m14[m[36m:[m        "[1;31mFERNET_KEY[m is not configured."
+[35mserver/app/utils/encryption.py[m[36m:[m[32m20[m[36m:[m        [1;31mFERNET_KEY[m.encode("utf-8")
+[35mserver/app/utils/encryption.py[m[36m:[m[32m25[m[36m:[m        "[1;31mFERNET_KEY[m is invalid."
+[35mserver/app/utils/resume_processor.py[m[36m:[m[32m47[m[36m:[mGEMINI_[1;31mAPI_KEY[m = os.getenv("GEMINI_[1;31mAPI_KEY[m")
+[35mserver/app/utils/resume_processor.py[m[36m:[m[32m50[m[36m:[mif GEMINI_[1;31mAPI_KEY[m and genai:
+[35mserver/app/utils/resume_processor.py[m[36m:[m[32m54[m[36m:[m            [1;31mapi_key[m=GEMINI_[1;31mAPI_KEY[m

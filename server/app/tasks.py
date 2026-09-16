@@ -1,9 +1,22 @@
 """
-Celery tasks for continuous job scraping and cleanup.
+CareerSync global scrape + save task.
 
-Tasks:
-  - scrape_all_skills_task(): Scrapes jobs from all platforms for popular skills
-  - cleanup_expired_jobs_task(): Deletes jobs older than 2 days daily
+Platforms:
+    Naukri
+    Internshala
+
+Search queries are discovery metadata ONLY:
+    React.js
+    Express.js
+    Frontend Developer
+    Backend Developer
+
+Each platform tries to collect 5 UNIQUE jobs per query.
+
+Job embedding is generated ONCE before DB save from:
+    title + company + location + clean structured description
+
+skill_query is deliberately excluded from embedding.
 """
 
 import asyncio
@@ -11,76 +24,185 @@ import logging
 from datetime import datetime, timedelta
 from typing import List
 
+from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
+
 from app.celery_config import celery_app
 from app.database import AsyncSessionLocal
 from app.models.job import Job
 from app.scrapers.naukri import scrape_naukri
-from app.scrapers.indeed import scrape_indeed
 from app.scrapers.internshala import scrape_internshala
-from sqlalchemy import delete
-from sqlalchemy.exc import IntegrityError
+from app.utils.semantic_match import create_embedding
+
 
 logger = logging.getLogger(__name__)
 
-# Popular tech skills to scrape (hardcoded list)
-# TODO: Later migrate to dynamic top-N from all users' skills
+
 DEFAULT_SKILLS = [
-    "Python",
-    "Java",
-    "JavaScript",
-    "C++",
-    "C#",
-    "PHP",
-    "Ruby",
-    "Go",
-    "Rust",
-    "TypeScript",
-    "React",
-    "Angular",
-    "Vue.js",
-    "Node.js",
-    "Django",
-    "FastAPI",
-    "Flask",
-    "Spring Boot",
-    "SQL",
-    "PostgreSQL",
-    "MongoDB",
-    "AWS",
-    "Docker",
-    "Kubernetes",
-    "Git",
-    "Linux",
-    "Machine Learning",
-    "Data Science",
-    "AI",
+    "React.js",
+    "Express.js",
+    "Frontend Developer",
+    "Backend Developer",
 ]
 
-JOBS_PER_SKILL = 10
-DELAY_BETWEEN_SKILLS = 2  # seconds, reduced for faster scraping
+JOBS_PER_SKILL = 3
+DELAY_BETWEEN_PLATFORMS = 2
 
 
-async def _get_db_session():
-    """Get a new async database session."""
-    async with AsyncSessionLocal() as session:
-        yield session
+def build_job_text(job_data: dict) -> str:
+    """
+    Exact text embedded once and later compared with saved resume embedding.
+
+    Normal Naukri Platform Key Skills remain inside description, so they may
+    contribute semantically, but they do NOT enter exact skill coverage.
+    """
+    return "\n".join(
+        [
+            f"Job title: {job_data.get('title') or ''}",
+            f"Company: {job_data.get('company') or ''}",
+            f"Location: {job_data.get('location') or ''}",
+            f"Description: {job_data.get('description') or ''}",
+        ]
+    )
+
+
+async def _scrape_all_platforms() -> List[dict]:
+    all_jobs: list[dict] = []
+
+    for platform_name, scraper in (
+        ("naukri", scrape_naukri),
+        ("internshala", scrape_internshala),
+    ):
+        try:
+            logger.info(
+                "Starting %s scrape | queries=%d | max_per_query=%d",
+                platform_name,
+                len(DEFAULT_SKILLS),
+                JOBS_PER_SKILL,
+            )
+
+            jobs = await scraper(
+                DEFAULT_SKILLS,
+                max_per_skill=JOBS_PER_SKILL,
+            )
+            jobs = jobs or []
+
+            valid = []
+            for job in jobs:
+                if not isinstance(job, dict):
+                    continue
+
+                url = str(job.get("url") or "").strip()
+                if not url:
+                    logger.warning(
+                        "Skipping %s job without URL | %s",
+                        platform_name,
+                        job.get("title"),
+                    )
+                    continue
+
+                description = str(job.get("description") or "").strip()
+                if not description:
+                    logger.warning(
+                        "%s job has empty clean description | %s",
+                        platform_name,
+                        job.get("title"),
+                    )
+
+                job["source"] = platform_name
+                valid.append(job)
+
+            all_jobs.extend(valid)
+
+            logger.info(
+                "%s scrape finished | jobs=%d",
+                platform_name,
+                len(valid),
+            )
+
+        except Exception as exc:
+            logger.exception(
+                "%s scrape failed; continuing: %s",
+                platform_name,
+                exc,
+            )
+
+        if DELAY_BETWEEN_PLATFORMS:
+            await asyncio.sleep(DELAY_BETWEEN_PLATFORMS)
+
+    logger.info(
+        "Global scrape collection finished | total_records=%d",
+        len(all_jobs),
+    )
+    return all_jobs
 
 
 async def _save_jobs_to_db(jobs: List[dict]) -> int:
-    """
-    Save scraped jobs to database.
-    Returns the number of jobs successfully saved (ignoring duplicates).
-    """
     if not jobs:
+        logger.warning("No scraped jobs received for DB save.")
+        return 0
+
+    unique_jobs = []
+    seen_urls = set()
+
+    for raw in jobs:
+        job = dict(raw)
+        url = str(job.get("url") or "").strip().rstrip("/")
+        if not url or url in seen_urls:
+            continue
+
+        seen_urls.add(url)
+        job["url"] = url
+        unique_jobs.append(job)
+
+    if not unique_jobs:
         return 0
 
     saved_count = 0
+
     async with AsyncSessionLocal() as session:
-        for job_data in jobs:
+        existing_result = await session.execute(
+            select(Job.url).where(
+                Job.url.in_([job["url"] for job in unique_jobs])
+            )
+        )
+
+        existing_urls = {
+            str(url).rstrip("/")
+            for url in existing_result.scalars().all()
+            if url
+        }
+
+        new_jobs = [
+            job for job in unique_jobs
+            if job["url"] not in existing_urls
+        ]
+
+        logger.info(
+            "DB ingestion | scraped=%d unique=%d existing=%d new=%d",
+            len(jobs),
+            len(unique_jobs),
+            len(existing_urls),
+            len(new_jobs),
+        )
+
+        for job_data in new_jobs:
+            now = datetime.utcnow()
+
             try:
-                # Create Job object with expires_at = now + 2 days
-                job = Job(
-                    title=job_data.get("title"),
+                embedding_text = build_job_text(job_data)
+                embedding = create_embedding(embedding_text)
+            except Exception as exc:
+                embedding = None
+                logger.exception(
+                    "Embedding failed; saving row without embedding | %s | %s",
+                    job_data.get("url"),
+                    exc,
+                )
+
+            try:
+                row = Job(
+                    title=job_data.get("title") or "Untitled Job",
                     company=job_data.get("company"),
                     location=job_data.get("location"),
                     salary=job_data.get("salary"),
@@ -88,193 +210,93 @@ async def _save_jobs_to_db(jobs: List[dict]) -> int:
                     url=job_data.get("url"),
                     source=job_data.get("source"),
                     skill_query=job_data.get("skill_query"),
-                    scraped_at=datetime.utcnow(),
-                    expires_at=datetime.utcnow() + timedelta(days=3),
+                    embedding=embedding,
+                    scraped_at=now,
+                    expires_at=now + timedelta(days=7),
                 )
-                session.add(job)
+
+                session.add(row)
                 await session.commit()
                 saved_count += 1
-                logger.debug(
-                    f"Saved job: {job.title} from {job.source} (skill: {job.skill_query})"
-                )
-            except IntegrityError:
-                # Duplicate job (unique constraint on url, source, skill_query)
-                await session.rollback()
-                logger.debug(
-                    f"Duplicate job skipped: {job_data.get('url')} "
-                    f"({job_data.get('source')})"
-                )
-            except Exception as e:
-                await session.rollback()
-                logger.error(f"Error saving job: {e}")
 
+                logger.info(
+                    "SAVED %d/%d | %s | %s | %s | embedding=%s",
+                    saved_count,
+                    len(new_jobs),
+                    row.source,
+                    row.skill_query,
+                    row.title,
+                    "yes" if embedding else "no",
+                )
+
+            except IntegrityError:
+                await session.rollback()
+                logger.info("Duplicate skipped during insert | %s", job_data.get("url"))
+
+            except Exception as exc:
+                await session.rollback()
+                logger.exception(
+                    "DB SAVE FAILED | %s | %s",
+                    job_data.get("url"),
+                    exc,
+                )
+
+    logger.info(
+        "DB save finished | requested_new=%d saved=%d",
+        len(new_jobs),
+        saved_count,
+    )
     return saved_count
 
-@celery_app.task(bind=True, name="app.tasks.scrape_for_user_skills_task")
-def scrape_for_user_skills_task(self, user_id: str, skills: List[str]):
-    """
-    Scrape jobs for a specific user's skills (triggered after signup).
-    Runs asynchronously so signup is not blocked.
-    """
-    logger.info(f"🔄 Starting user-specific scraping for user {user_id} with skills: {skills}")
-    if not skills:
-        logger.info(f"No skills for user {user_id}, skipping scraping.")
-        return {"status": "skipped", "reason": "no skills"}
-    
-    try:
-        all_jobs = asyncio.run(_scrape_for_skills(skills))
-        saved = asyncio.run(_save_jobs_to_db(all_jobs))
-        logger.info(f"✅ User {user_id} scraping complete: {len(all_jobs)} jobs, {saved} saved")
-        return {
-            "status": "success",
-            "user_id": user_id,
-            "skills": skills,
-            "jobs_scraped": len(all_jobs),
-            "jobs_saved": saved,
-        }
-    except Exception as e:
-        logger.error(f"❌ User scraping failed for {user_id}: {e}", exc_info=True)
-        raise
 
-async def _scrape_for_skills(skills: List[str]) -> List[dict]:
-    """Scrape jobs for given skills from all platforms."""
-    all_jobs = []
-    JOBS_PER_SKILL = 10
-    try:
-        naukri_jobs = await scrape_naukri(skills, max_per_skill=JOBS_PER_SKILL)
-        all_jobs.extend(naukri_jobs)
-        await asyncio.sleep(2)
-    except Exception as e:
-        logger.error(f"Naukri failed for user skills: {e}")
-    
-    try:
-        indeed_jobs = await scrape_indeed(skills, max_per_skill=JOBS_PER_SKILL)
-        all_jobs.extend(indeed_jobs)
-        await asyncio.sleep(2)
-    except Exception as e:
-        logger.error(f"Indeed failed for user skills: {e}")
-    
-    try:
-        internshala_jobs = await scrape_internshala(skills, max_per_skill=JOBS_PER_SKILL)
-        all_jobs.extend(internshala_jobs)
-    except Exception as e:
-        logger.error(f"Internshala failed for user skills: {e}")
-    
-    return all_jobs
+async def _run_scrape_and_save_cycle():
+    jobs = await _scrape_all_platforms()
+    saved = await _save_jobs_to_db(jobs)
+    return jobs, saved
 
-@celery_app.task(bind=True, name="app.tasks.scrape_all_skills_task")
+
+@celery_app.task(
+    bind=True,
+    name="app.tasks.scrape_all_skills_task",
+)
 def scrape_all_skills_task(self):
-    """
-    Main scraping task — scrapes jobs from all platforms for popular skills.
-    
-    Runs continuously (every 30 minutes via beat schedule).
-    Calls all three scrapers sequentially and saves results to database.
-    """
-    logger.info("🔄 Starting job scraping task...")
-    try:
-        # Run async scrapers
-        all_jobs = asyncio.run(_scrape_all_platforms())
-        
-        # Save to database
-        saved = asyncio.run(_save_jobs_to_db(all_jobs))
-        
-        total = len(all_jobs)
-        logger.info(
-            f"✅ Scraping complete: {total} jobs scraped, "
-            f"{saved} saved to DB ({total - saved} duplicates)"
-        )
-        
-        return {
-            "status": "success",
-            "total_jobs_scraped": total,
-            "jobs_saved": saved,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-    
-    except Exception as e:
-        logger.error(f"❌ Scraping task failed: {e}", exc_info=True)
-        # Re-raise so Celery can retry
-        raise
+    logger.info("Starting daily global job scrape")
+
+    jobs, saved = asyncio.run(_run_scrape_and_save_cycle())
+
+    logger.info(
+        "SCRAPE COMPLETE | scraped=%d | saved=%d | skipped/duplicate=%d",
+        len(jobs),
+        saved,
+        max(0, len(jobs) - saved),
+    )
+
+    return {
+        "status": "success",
+        "total_jobs_scraped": len(jobs),
+        "jobs_saved": saved,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
 
 
-async def _scrape_all_platforms() -> List[dict]:
-    """Call all three scrapers and combine results."""
-    all_jobs = []
-    
-    logger.info(f"📍 Scraping {len(DEFAULT_SKILLS)} skills from 3 platforms...")
-    
-    try:
-        # Naukri
-        logger.info("🔗 Starting Naukri scrape...")
-        naukri_jobs = await scrape_naukri(DEFAULT_SKILLS, max_per_skill=JOBS_PER_SKILL)
-        all_jobs.extend(naukri_jobs)
-        logger.info(f"✓ Naukri: {len(naukri_jobs)} jobs scraped")
-        await asyncio.sleep(DELAY_BETWEEN_SKILLS)
-    except Exception as e:
-        logger.error(f"❌ Naukri scraping failed: {e}")
-    
-    try:
-        # Indeed
-        logger.info("🔗 Starting Indeed scrape...")
-        indeed_jobs = await scrape_indeed(DEFAULT_SKILLS, max_per_skill=JOBS_PER_SKILL)
-        all_jobs.extend(indeed_jobs)
-        logger.info(f"✓ Indeed: {len(indeed_jobs)} jobs scraped")
-        await asyncio.sleep(DELAY_BETWEEN_SKILLS)
-    except Exception as e:
-        logger.error(f"❌ Indeed scraping failed: {e}")
-    
-    try:
-        # Internshala
-        logger.info("🔗 Starting Internshala scrape...")
-        internshala_jobs = await scrape_internshala(
-            DEFAULT_SKILLS, max_per_skill=JOBS_PER_SKILL
-        )
-        all_jobs.extend(internshala_jobs)
-        logger.info(f"✓ Internshala: {len(internshala_jobs)} jobs scraped")
-    except Exception as e:
-        logger.error(f"❌ Internshala scraping failed: {e}")
-    
-    return all_jobs
-
-
-@celery_app.task(bind=True, name="app.tasks.cleanup_expired_jobs_task")
-def cleanup_expired_jobs_task(self):
-    """
-    Daily cleanup task — deletes jobs older than 2 days.
-    
-    Runs daily at 2 AM UTC (via beat schedule).
-    """
-    logger.info("🧹 Starting job cleanup task...")
-    try:
-        deleted_count = asyncio.run(_delete_expired_jobs())
-        logger.info(f"✅ Cleanup complete: {deleted_count} expired jobs deleted")
-        
-        return {
-            "status": "success",
-            "deleted_jobs": deleted_count,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-    
-    except Exception as e:
-        logger.error(f"❌ Cleanup task failed: {e}", exc_info=True)
-        raise
-
-
-async def _delete_expired_jobs() -> int:
-    """Delete all jobs where expires_at < now. Returns deleted count."""
+async def _cleanup_expired_jobs_async() -> dict:
     async with AsyncSessionLocal() as session:
-        try:
-            # Query expired jobs
-            result = await session.execute(
-                delete(Job).where(Job.expires_at < datetime.utcnow())
-            )
-            deleted_count = result.rowcount
-            await session.commit()
-            
-            logger.info(f"Deleted {deleted_count} expired job(s)")
-            return deleted_count
-        
-        except Exception as e:
-            await session.rollback()
-            logger.error(f"Error deleting expired jobs: {e}")
-            raise
+        now = datetime.utcnow()
+        result = await session.execute(
+            delete(Job)
+            .where(Job.expires_at < now)
+            .returning(Job.id)
+        )
+        deleted = result.scalars().all()
+        await session.commit()
+
+        return {
+            "status": "success",
+            "deleted": len(deleted),
+            "timestamp": now.isoformat(),
+        }
+
+
+@celery_app.task(name="app.tasks.cleanup_expired_jobs_task")
+def cleanup_expired_jobs_task():
+    return asyncio.run(_cleanup_expired_jobs_async())

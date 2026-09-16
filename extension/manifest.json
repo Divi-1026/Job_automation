@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "CareerSync Universal Autofill",
+  "version": "3.1.0",
+  "description": "CareerSync production multi-pass universal autofill for dynamic ATS forms with AI semantic fallback and legal/password safety.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "CareerSync Autofill",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content/modules/FormScanner.js",
+        "content/modules/FieldFiller.js",
+        "content/modules/MessageBus.js",
+        "content/modules/DOMObserver.js",
+        "content/modules/ConfidenceUI.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

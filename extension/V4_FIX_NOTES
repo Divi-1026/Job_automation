@@ -1,0 +1,18 @@
+CareerSync Semantic Autofill V4 - Groq 413 / TPM fix
+
+Fixes:
+1. Groq request is compacted to stay below the 8k token/request budget.
+2. Learned memory sent to AI reduced to latest 20 entries with short q/a only.
+3. Resume context capped to 1800 characters for autofill semantic matching.
+4. Empty profile values are removed before sending to AI.
+5. Huge dropdowns no longer send hundreds of choices; likely profile/memory matches plus a small sample are sent.
+6. AI prompt shortened while preserving semantic matching rules.
+7. Extension sends up to 50 unresolved fields in one compact batch to avoid multiple requests consuming the per-minute token budget.
+8. Existing V3 fixes remain, including clean select question text and duplicate-run protection.
+
+Replace:
+server/app/routers/extension.py
+extension/background.js
+extension/content/content.js
+
+Then restart backend, reload extension, and refresh the form page.

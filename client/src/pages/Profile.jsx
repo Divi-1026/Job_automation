@@ -7,11 +7,11 @@ import {
 } from '../store/authSlice'
 import api from '../api/axiosInstance'  // <-- import api for credentials
 import {
-  Zap, ArrowLeft, LogOut, Link2, MapPin, Github, Linkedin, Globe,
+  Zap, ArrowLeft, LogOut, Link2, MapPin, Globe,
   Briefcase, GraduationCap, Wrench, FileText, Upload, Lock,
   AlertTriangle, CheckCircle, X, Save, Loader2, ExternalLink,
 } from 'lucide-react'
-
+import { FaGithub, FaLinkedin } from 'react-icons/fa'
 const inputCls = (err) =>
   `w-full px-4 py-3 rounded-lg bg-white border text-[#0f0f1a] text-sm placeholder-[#a0a0b0]
    focus:outline-none focus:shadow-[0_0_0_3px_rgba(16,185,129,0.12)] transition-all duration-200
@@ -77,8 +77,14 @@ export default function Profile() {
   // Naukri credentials state
   const [naukriEmail, setNaukriEmail] = useState('')
   const [naukriPassword, setNaukriPassword] = useState('')
-  const [credSaved, setCredSaved] = useState(false)
-  const [loadingCred, setLoadingCred] = useState(false)
+  const [naukriCredSaved, setNaukriCredSaved] = useState(false)
+  const [loadingNaukriCred, setLoadingNaukriCred] = useState(false)
+
+  // Internshala credentials state
+  const [internshalaEmail, setInternshalaEmail] = useState('')
+  const [internshalaPassword, setInternshalaPassword] = useState('')
+  const [internshalaCredSaved, setInternshalaCredSaved] = useState(false)
+  const [loadingInternshalaCred, setLoadingInternshalaCred] = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -87,19 +93,36 @@ export default function Profile() {
     setTimeout(() => setter(''), 3500)
   }
 
-  // Fetch existing Naukri credentials on mount
+  // Fetch saved automation credentials on mount.
+  // Passwords are never returned by the backend.
   useEffect(() => {
     const fetchCredentials = async () => {
       try {
-        const res = await api.get('/credentials/naukri')
-        if (res.data.exists) {
-          setNaukriEmail(res.data.email)
-          setCredSaved(true)
+        const [naukriRes, internshalaRes] = await Promise.allSettled([
+          api.get('/credentials/naukri'),
+          api.get('/credentials/internshala'),
+        ])
+
+        if (
+          naukriRes.status === 'fulfilled' &&
+          naukriRes.value?.data?.exists
+        ) {
+          setNaukriEmail(naukriRes.value.data.email || '')
+          setNaukriCredSaved(true)
+        }
+
+        if (
+          internshalaRes.status === 'fulfilled' &&
+          internshalaRes.value?.data?.exists
+        ) {
+          setInternshalaEmail(internshalaRes.value.data.email || '')
+          setInternshalaCredSaved(true)
         }
       } catch (err) {
-        console.error('Failed to fetch credentials:', err)
+        console.error('Failed to fetch automation credentials:', err)
       }
     }
+
     fetchCredentials()
   }, [])
 
@@ -187,21 +210,75 @@ export default function Profile() {
     navigate('/login')
   }
 
-  const handleSaveCredentials = async (e) => {
+  const handleSaveNaukriCredentials = async (e) => {
     e.preventDefault()
-    setLoadingCred(true)
+
+    if (!naukriEmail.trim() || !naukriPassword) {
+      setSectionError(prev => ({
+        ...prev,
+        naukriCred: 'Enter both Naukri email and password.'
+      }))
+      return
+    }
+
+    setSectionError(prev => ({ ...prev, naukriCred: '' }))
+    setLoadingNaukriCred(true)
+
     try {
       await api.post('/credentials/naukri', {
         platform: 'naukri',
-        email: naukriEmail,
-        password: naukriPassword
+        email: naukriEmail.trim(),
+        password: naukriPassword,
       })
-      setCredSaved(true)
+
+      setNaukriPassword('')
+      setNaukriCredSaved(true)
       flashSuccess(setSuccessMsg, 'Naukri credentials saved successfully!')
     } catch (err) {
-      setSectionError(prev => ({ ...prev, cred: err.response?.data?.detail || 'Failed to save credentials' }))
+      setSectionError(prev => ({
+        ...prev,
+        naukriCred:
+          err.response?.data?.detail ||
+          'Failed to save Naukri credentials.'
+      }))
     } finally {
-      setLoadingCred(false)
+      setLoadingNaukriCred(false)
+    }
+  }
+
+  const handleSaveInternshalaCredentials = async (e) => {
+    e.preventDefault()
+
+    if (!internshalaEmail.trim() || !internshalaPassword) {
+      setSectionError(prev => ({
+        ...prev,
+        internshalaCred: 'Enter both Internshala email and password.'
+      }))
+      return
+    }
+
+    setSectionError(prev => ({ ...prev, internshalaCred: '' }))
+    setLoadingInternshalaCred(true)
+
+    try {
+      await api.post('/credentials/internshala', {
+        platform: 'internshala',
+        email: internshalaEmail.trim(),
+        password: internshalaPassword,
+      })
+
+      setInternshalaPassword('')
+      setInternshalaCredSaved(true)
+      flashSuccess(setSuccessMsg, 'Internshala credentials saved successfully!')
+    } catch (err) {
+      setSectionError(prev => ({
+        ...prev,
+        internshalaCred:
+          err.response?.data?.detail ||
+          'Failed to save Internshala credentials.'
+      }))
+    } finally {
+      setLoadingInternshalaCred(false)
     }
   }
 
@@ -270,7 +347,7 @@ export default function Profile() {
               </Field>
               <Field label="GitHub ID">
                 <div className="relative">
-                  <Github size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0a0b0]" strokeWidth={1.75} />
+                  <FaGithub size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0a0b0]" strokeWidth={1.75} />
                   <input type="text" placeholder="yourhandle"
                     value={form.github_id} onChange={e => set('github_id', e.target.value)}
                     className={inputCls() + ' pl-9'} />
@@ -278,7 +355,7 @@ export default function Profile() {
               </Field>
               <Field label="LinkedIn ID">
                 <div className="relative">
-                  <Linkedin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0a0b0]" strokeWidth={1.75} />
+                  <FaLinkedin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0a0b0]" strokeWidth={1.75} />
                   <input type="text" placeholder="yourprofile"
                     value={form.linkedin_id} onChange={e => set('linkedin_id', e.target.value)}
                     className={inputCls() + ' pl-9'} />
@@ -443,35 +520,146 @@ export default function Profile() {
         </Section>
 
         {/* Naukri Credentials Section */}
-        <Section title="Naukri Automation Credentials" Icon={Lock}>
-          <form onSubmit={handleSaveCredentials} className="flex flex-col gap-4">
-            <Field label="Naukri Email">
-              <input type="email" placeholder="your.email@example.com"
-                value={naukriEmail} onChange={e => setNaukriEmail(e.target.value)}
-                className={inputCls()} />
-            </Field>
-            <Field label="Naukri Password">
-              <input type="password" placeholder="Your Naukri password"
-                value={naukriPassword} onChange={e => setNaukriPassword(e.target.value)}
-                className={inputCls()} />
-            </Field>
-            {sectionError.cred && (
-              <p className="flex items-center gap-1 text-xs text-[#ef4444]">
-                <AlertTriangle size={11} strokeWidth={2} /> {sectionError.cred}
-              </p>
-            )}
-            <button type="submit" disabled={loadingCred}
-              className="self-start px-6 py-2.5 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#0ea572] transition-all disabled:opacity-60"
-              style={{ fontFamily: 'EuclidSB, sans-serif' }}>
-              {loadingCred ? 'Saving...' : 'Save Credentials'}
-            </button>
-            {credSaved && (
-              <p className="text-xs text-[#059669] flex items-center gap-1">
-                <CheckCircle size={12} /> Credentials saved
-              </p>
-            )}
-          </form>
-        </Section>
+        <div id="naukri-credentials" className="scroll-mt-24">
+          <Section title="Naukri Automation Credentials" Icon={Lock}>
+            <p className="text-xs text-[#8a8a9d] -mt-2">
+              Required only for Naukri auto-apply. Your password is stored encrypted and is never displayed back.
+            </p>
+
+            <form onSubmit={handleSaveNaukriCredentials} className="flex flex-col gap-4">
+              <Field label="Naukri Email">
+                <input
+                  type="email"
+                  autoComplete="username"
+                  placeholder="your.email@example.com"
+                  value={naukriEmail}
+                  onChange={e => setNaukriEmail(e.target.value)}
+                  className={inputCls()}
+                />
+              </Field>
+
+              <Field
+                label="Naukri Password"
+                hint={
+                  naukriCredSaved
+                    ? 'Credentials already saved. Enter a password only if you want to update them.'
+                    : ''
+                }
+              >
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder={
+                    naukriCredSaved
+                      ? 'Enter password to update credentials'
+                      : 'Your Naukri password'
+                  }
+                  value={naukriPassword}
+                  onChange={e => setNaukriPassword(e.target.value)}
+                  className={inputCls()}
+                />
+              </Field>
+
+              {sectionError.naukriCred && (
+                <p className="flex items-center gap-1 text-xs text-[#ef4444]">
+                  <AlertTriangle size={11} strokeWidth={2} /> {sectionError.naukriCred}
+                </p>
+              )}
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="submit"
+                  disabled={loadingNaukriCred}
+                  className="self-start px-6 py-2.5 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#0ea572] transition-all disabled:opacity-60"
+                  style={{ fontFamily: 'EuclidSB, sans-serif' }}
+                >
+                  {loadingNaukriCred
+                    ? 'Saving...'
+                    : naukriCredSaved
+                      ? 'Update Naukri Credentials'
+                      : 'Save Naukri Credentials'}
+                </button>
+
+                {naukriCredSaved && (
+                  <p className="text-xs text-[#059669] flex items-center gap-1">
+                    <CheckCircle size={12} /> Naukri credentials saved
+                  </p>
+                )}
+              </div>
+            </form>
+          </Section>
+        </div>
+
+        {/* Internshala Credentials Section */}
+        <div id="internshala-credentials" className="scroll-mt-24">
+          <Section title="Internshala Automation Credentials" Icon={Lock}>
+            <p className="text-xs text-[#8a8a9d] -mt-2">
+              Required only for Internshala auto-apply. Save them once; CareerSync will reuse them on future applications.
+            </p>
+
+            <form onSubmit={handleSaveInternshalaCredentials} className="flex flex-col gap-4">
+              <Field label="Internshala Email">
+                <input
+                  type="email"
+                  autoComplete="username"
+                  placeholder="your.email@example.com"
+                  value={internshalaEmail}
+                  onChange={e => setInternshalaEmail(e.target.value)}
+                  className={inputCls()}
+                />
+              </Field>
+
+              <Field
+                label="Internshala Password"
+                hint={
+                  internshalaCredSaved
+                    ? 'Credentials already saved. Enter a password only if you want to update them.'
+                    : ''
+                }
+              >
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder={
+                    internshalaCredSaved
+                      ? 'Enter password to update credentials'
+                      : 'Your Internshala password'
+                  }
+                  value={internshalaPassword}
+                  onChange={e => setInternshalaPassword(e.target.value)}
+                  className={inputCls()}
+                />
+              </Field>
+
+              {sectionError.internshalaCred && (
+                <p className="flex items-center gap-1 text-xs text-[#ef4444]">
+                  <AlertTriangle size={11} strokeWidth={2} /> {sectionError.internshalaCred}
+                </p>
+              )}
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="submit"
+                  disabled={loadingInternshalaCred}
+                  className="self-start px-6 py-2.5 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#0ea572] transition-all disabled:opacity-60"
+                  style={{ fontFamily: 'EuclidSB, sans-serif' }}
+                >
+                  {loadingInternshalaCred
+                    ? 'Saving...'
+                    : internshalaCredSaved
+                      ? 'Update Internshala Credentials'
+                      : 'Save Internshala Credentials'}
+                </button>
+
+                {internshalaCredSaved && (
+                  <p className="text-xs text-[#059669] flex items-center gap-1">
+                    <CheckCircle size={12} /> Internshala credentials saved
+                  </p>
+                )}
+              </div>
+            </form>
+          </Section>
+        </div>
 
         <Section title="Change Password" Icon={Lock}>
           <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">

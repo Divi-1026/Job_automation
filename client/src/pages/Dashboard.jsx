@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAppDispatch, useAuth } from '../store/hooks'
 import { logoutUser } from '../store/authSlice'
@@ -20,6 +21,8 @@ import {
   Globe,
   ChevronRight,
   CheckCircle2,
+  ChevronDown,
+  Keyboard,
 } from 'lucide-react'
 
 const FEATURES = [
@@ -49,10 +52,10 @@ const FEATURES = [
     desc: 'AI rewrites your resume summary to match each job description automatically.',
   },
   {
-    Icon: Bell,
-    title: 'Instant Alerts',
-    desc: 'Get notified the moment a job matching your skills goes live.',
-  },
+  Icon: Keyboard,
+  title: 'Autofill Job Forms',
+  desc: 'Automatically fills common job application fields using your saved profile details.',
+},
 ]
 
 const HOW_IT_WORKS = [
@@ -87,6 +90,34 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef(null)
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [])
+
   const handleLogout = async () => {
     await dispatch(logoutUser())
     navigate('/login')
@@ -96,50 +127,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#f5f5fa]" style={{ fontFamily: 'EuclidR, sans-serif' }}>
 
       {/* ── Navbar ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-[#e2e2ed] bg-white/90 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <span
-              className="text-xl text-[#0f0f1a]"
-              style={{ fontFamily: 'EuclidB, sans-serif' }}
-            >
-              Career
-              <span className="text-[#10B981]">Sync</span>
-            </span>
-          </div>
-
-          {/* Nav links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm text-[#6b6b80]">
-            <a href="#features" className="hover:text-[#0f0f1a] transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-[#0f0f1a] transition-colors">How it works</a>
-            <Link to="/support" className="hover:text-[#0f0f1a] transition-colors">Support</Link>
-            <Link to="/about" className="hover:text-[#0f0f1a] transition-colors">About us</Link>
-          </nav>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-3">
-            <Link
-              to="/profile"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5fa] border border-[#e2e2ed] text-sm text-[#6b6b80] hover:border-[#10B981]/50 hover:text-[#0f0f1a] transition-all duration-200"
-            >
-              <span className="w-6 h-6 rounded-full bg-[#10B981] flex items-center justify-center text-white text-xs flex-shrink-0"
-                style={{ fontFamily: 'EuclidSB, sans-serif' }}>
-                {user?.full_name?.[0]?.toUpperCase() ?? <User size={12} />}
-              </span>
-              <span className="hidden sm:block">{user?.full_name?.split(' ')[0] ?? 'Profile'}</span>
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#6b6b80] hover:text-[#ef4444] hover:bg-[#ef4444]/[0.06] border border-transparent hover:border-[#ef4444]/20 transition-all duration-200"
-            >
-              <LogOut size={15} />
-              <span className="hidden sm:block">Log out</span>
-            </button>
-          </div>
-        </div>
-      </header>
+     
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden px-6 pt-24 pb-28 text-center">
@@ -165,7 +153,7 @@ export default function Dashboard() {
 
           <p className="text-lg text-[#6b6b80] max-w-xl mx-auto mb-10 leading-relaxed">
             Our plateform scrapes thousands of jobs, scores them against your resume, and auto-applies
-            to the best matches — all while you sleep.
+            to the best matches 
           </p>
 
           {/* CTAs */}
@@ -194,9 +182,6 @@ export default function Dashboard() {
             </a>
           </div>
 
-          <p className="mt-5 text-xs text-[#a0a0b0]">
-            No credit card required &nbsp;·&nbsp; Works with Chrome & Firefox &nbsp;·&nbsp; 2-minute setup
-          </p>
         </div>
       </section>
 
@@ -315,14 +300,7 @@ export default function Dashboard() {
                 <Globe size={16} strokeWidth={2} />
                 Add to Chrome
               </a>
-              <a
-                href="#"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-[#e2e2ed] text-[#0f0f1a] rounded-xl hover:border-[#10B981]/40 hover:bg-[#10B981]/[0.04] transition-all shadow-sm"
-                style={{ fontFamily: 'EuclidSB, sans-serif' }}
-              >
-                <Download size={16} strokeWidth={2} />
-                Add to Firefox
-              </a>
+             
             </div>
 
             <div className="flex items-center justify-center gap-4 mt-5 text-xs text-[#a0a0b0]">

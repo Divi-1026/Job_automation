@@ -1,116 +1,624 @@
 """
-Resume text extraction and skill extraction using Google Gemini API.
+Resume processing utilities.
+
+Responsibilities
+----------------
+1. Extract readable text from PDF.
+2. Extract technical skills locally.
+3. Optionally enhance skill extraction using Gemini.
+4. Merge skills without duplicates.
+
+IMPORTANT:
+Resume parsing is performed only when the user
+uploads or replaces a resume.
+
+GET /jobs never parses the resume again.
 """
 
 import io
 import logging
 import os
+import re
+
 from typing import List
+
 
 try:
     import PyPDF2
 except ImportError:
     PyPDF2 = None
 
+
 try:
     from google import genai
-    from google.genai import types
 except ImportError:
     genai = None
 
-logger = logging.getLogger(__name__)
 
-# Configure Gemini API
+logger = logging.getLogger(
+    __name__
+)
+
+
+# ---------------------------------------------------------
+# Gemini configuration
+# ---------------------------------------------------------
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+
 if GEMINI_API_KEY and genai:
-    # Initialize the new client
-    client = genai.Client(api_key=GEMINI_API_KEY)
-else:
-    client = None
-
-
-def extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    """Extract text from PDF file bytes."""
-    if not PyPDF2:
-        raise ValueError("PyPDF2 is not installed.")
-    try:
-        pdf_file = io.BytesIO(pdf_bytes)
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        text = ""
-        for page in pdf_reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-        return text.strip()
-    except Exception as e:
-        logger.error(f"PDF extraction error: {e}")
-        raise ValueError("Failed to extract text from PDF.")
-
-
-def extract_skills_from_text(resume_text: str) -> List[str]:
-    """
-    Use the new Gemini API client to extract technical skills from resume text.
-    Returns a list of unique skills (preserving original casing).
-    """
-    if not GEMINI_API_KEY:
-        logger.warning("GEMINI_API_KEY not set. Skipping skill extraction.")
-        return []
-    if not client:
-        logger.warning("google-genai not installed or configured.")
-        return []
-    if not resume_text or len(resume_text.strip()) < 50:
-        logger.warning("Resume text too short to extract skills.")
-        return []
 
     try:
-        # Use the latest 'gemini-2.0-flash' model
-        model_name = "gemini-2.5-flash-lite"
-
-        prompt = f"""
-You are a skill extraction assistant. Extract ONLY technical skills from the resume below.
-
-Return them as a comma-separated list. Include programming languages, frameworks, tools, databases, cloud platforms, etc.
-Do NOT include soft skills like "communication", "leadership", "teamwork", "problem solving".
-
-Examples of good skills: Python, JavaScript, React, Docker, AWS, PostgreSQL, Node.js, Machine Learning.
-
-Resume text (first 3000 chars):
-{resume_text[:3000]}
-
-Return ONLY the comma-separated skills, nothing else.
-"""
-        # Use the generate_content method with the new client
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt
+        gemini_client = genai.Client(
+            api_key=GEMINI_API_KEY
         )
 
-        skills_text = response.text.strip()
+    except Exception:
+        logger.exception(
+            "Could not initialize Gemini client"
+        )
 
-        # Parse comma-separated values
-        skills = [s.strip() for s in skills_text.split(",") if s.strip()]
-        # Remove duplicates (case-insensitive) and normalize
-        seen = set()
-        unique_skills = []
-        for skill in skills:
-            skill_lower = skill.lower()
-            if skill_lower not in seen:
-                seen.add(skill_lower)
-                unique_skills.append(skill)  # keep original casing
-        logger.info(f"Extracted {len(unique_skills)} skills: {unique_skills[:10]}...")
-        return unique_skills[:20]  # limit to top 20 skills
+        gemini_client = None
 
-    except Exception as e:
-        logger.error(f"Gemini API error: {e}")
+else:
+    gemini_client = None
+
+
+# ---------------------------------------------------------
+# Local technical skill dictionary
+#
+# This guarantees resume parsing works even if Gemini
+# is unavailable during the presentation.
+# ---------------------------------------------------------
+
+TECH_SKILLS = [
+
+    # Languages
+    "C",
+    "C++",
+    "C#",
+    "Java",
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "Go",
+    "Golang",
+    "Rust",
+    "Ruby",
+    "PHP",
+    "Kotlin",
+    "Swift",
+
+    # Frontend
+    "HTML",
+    "CSS",
+    "React",
+    "React.js",
+    "Redux",
+    "Tailwind CSS",
+    "Bootstrap",
+    "Angular",
+    "Vue.js",
+    "Next.js",
+    "Vite",
+
+    # Backend
+    "Node.js",
+    "Express.js",
+    "FastAPI",
+    "Flask",
+    "Django",
+    "Spring Boot",
+
+    # Databases
+    "SQL",
+    "MySQL",
+    "PostgreSQL",
+    "MongoDB",
+    "Redis",
+    "SQLite",
+
+    # Cloud / DevOps
+    "AWS",
+    "Azure",
+    "GCP",
+    "Docker",
+    "Kubernetes",
+    "Git",
+    "GitHub",
+    "CI/CD",
+    "Linux",
+
+    # API
+    "REST",
+    "REST API",
+    "GraphQL",
+    "WebSocket",
+    "Socket.IO",
+
+    # AI / ML
+    "Machine Learning",
+    "Deep Learning",
+    "Artificial Intelligence",
+    "AI",
+    "NLP",
+    "Natural Language Processing",
+    "Computer Vision",
+    "Scikit-learn",
+    "TensorFlow",
+    "PyTorch",
+    "Pandas",
+    "NumPy",
+
+    # Gen AI
+    "LangChain",
+    "FAISS",
+    "Hugging Face",
+    "Gemini",
+    "Groq",
+    "OpenAI",
+
+    # Other
+    "Streamlit",
+    "Postman",
+    "Playwright",
+    "Selenium",
+    "Celery",
+]
+
+
+# ---------------------------------------------------------
+# PDF text extraction
+# ---------------------------------------------------------
+
+def extract_text_from_pdf(
+    pdf_bytes: bytes
+) -> str:
+    """
+    Extract plain text from PDF bytes.
+    """
+
+    if PyPDF2 is None:
+        raise RuntimeError(
+            "PyPDF2 is not installed."
+        )
+
+
+    if not pdf_bytes:
+        raise ValueError(
+            "PDF file is empty."
+        )
+
+
+    try:
+
+        pdf_file = io.BytesIO(
+            pdf_bytes
+        )
+
+        reader = PyPDF2.PdfReader(
+            pdf_file
+        )
+
+
+        pages = []
+
+
+        for page in reader.pages:
+
+            page_text = (
+                page.extract_text()
+                or ""
+            )
+
+            if page_text.strip():
+
+                pages.append(
+                    page_text.strip()
+                )
+
+
+        text = "\n".join(
+            pages
+        )
+
+
+        # Normalize whitespace
+        text = re.sub(
+            r"[ \t]+",
+            " ",
+            text
+        )
+
+        text = re.sub(
+            r"\n{3,}",
+            "\n\n",
+            text
+        )
+
+
+        return text.strip()
+
+
+    except Exception as exc:
+
+        logger.exception(
+            "PDF extraction failed"
+        )
+
+        raise ValueError(
+            "Failed to extract readable text from PDF."
+        ) from exc
+
+
+# ---------------------------------------------------------
+# Local skill matching
+# ---------------------------------------------------------
+
+def _skill_present(
+    text: str,
+    skill: str
+) -> bool:
+
+    text_lower = text.lower()
+
+    skill_lower = skill.lower()
+
+
+    aliases = {
+
+        "node.js": [
+            "node.js",
+            "nodejs",
+            "node js",
+        ],
+
+        "react.js": [
+            "react.js",
+            "reactjs",
+            "react",
+        ],
+
+        "vue.js": [
+            "vue.js",
+            "vuejs",
+            "vue",
+        ],
+
+        "express.js": [
+            "express.js",
+            "expressjs",
+            "express",
+        ],
+
+        "next.js": [
+            "next.js",
+            "nextjs",
+            "next js",
+        ],
+
+        "c++": [
+            "c++",
+            "cpp",
+        ],
+
+        "c#": [
+            "c#",
+            "c sharp",
+        ],
+
+        "tailwind css": [
+            "tailwind",
+            "tailwind css",
+        ],
+
+        "rest api": [
+            "rest api",
+            "restful api",
+            "restful",
+        ],
+
+        "machine learning": [
+            "machine learning",
+            "ml",
+        ],
+
+        "natural language processing": [
+            "natural language processing",
+            "nlp",
+        ],
+
+        "artificial intelligence": [
+            "artificial intelligence",
+            "ai",
+        ],
+
+        "hugging face": [
+            "hugging face",
+            "huggingface",
+        ],
+
+        "socket.io": [
+            "socket.io",
+            "socketio",
+        ],
+
+        "scikit-learn": [
+            "scikit-learn",
+            "sklearn",
+        ],
+    }
+
+
+    candidates = aliases.get(
+        skill_lower,
+        [skill_lower]
+    )
+
+
+    for candidate in candidates:
+
+        if candidate in text_lower:
+
+            return True
+
+
+    return False
+
+
+def extract_skills_locally(
+    resume_text: str
+) -> List[str]:
+    """
+    Extract known technical skills without requiring
+    an external API.
+    """
+
+    if not resume_text:
+
         return []
 
 
-def merge_skills(existing: List[str], new_skills: List[str]) -> List[str]:
-    """Merge new skills into existing, avoiding duplicates (case-insensitive)."""
-    existing_lower = {s.lower() for s in existing}
-    merged = list(existing)
-    for skill in new_skills:
-        if skill.lower() not in existing_lower:
-            merged.append(skill)
-            existing_lower.add(skill.lower())
+    detected = []
+
+
+    for skill in TECH_SKILLS:
+
+        if _skill_present(
+            resume_text,
+            skill
+        ):
+
+            detected.append(
+                skill
+            )
+
+
+    return merge_skills(
+        [],
+        detected
+    )
+
+
+# ---------------------------------------------------------
+# Gemini skill extraction
+# ---------------------------------------------------------
+
+def _extract_skills_with_gemini(
+    resume_text: str
+) -> List[str]:
+
+    if not gemini_client:
+
+        return []
+
+
+    if len(
+        resume_text.strip()
+    ) < 40:
+
+        return []
+
+
+    prompt = f"""
+Extract technical skills from the following candidate resume.
+
+Return ONLY a comma-separated list.
+
+Include only:
+- programming languages
+- frontend/backend frameworks
+- databases
+- cloud platforms
+- developer tools
+- DevOps technologies
+- AI/ML technologies
+- APIs
+- software engineering technologies
+
+Do NOT return:
+- communication
+- teamwork
+- leadership
+- problem solving
+- hobbies
+
+Resume:
+{resume_text[:6000]}
+"""
+
+
+    try:
+
+        response = (
+            gemini_client.models.generate_content(
+
+                model="gemini-2.5-flash-lite",
+
+                contents=prompt,
+
+            )
+        )
+
+
+        text = (
+            response.text
+            or ""
+        ).strip()
+
+
+        if not text:
+
+            return []
+
+
+        skills = [
+
+            value.strip()
+
+            for value
+            in text.split(",")
+
+            if value.strip()
+
+        ]
+
+
+        return skills[:30]
+
+
+    except Exception as exc:
+
+        # Important:
+        # Do NOT break resume upload if Gemini fails.
+        logger.warning(
+
+            "Gemini skill extraction failed: %s",
+
+            exc,
+
+        )
+
+        return []
+
+
+# ---------------------------------------------------------
+# Public skill extraction function
+# ---------------------------------------------------------
+
+def extract_skills_from_text(
+    resume_text: str
+) -> List[str]:
+    """
+    Extract technical skills.
+
+    Local extraction always runs.
+    Gemini is used only as enhancement.
+    """
+
+    if not resume_text:
+
+        return []
+
+
+    local_skills = (
+        extract_skills_locally(
+            resume_text
+        )
+    )
+
+
+    gemini_skills = (
+        _extract_skills_with_gemini(
+            resume_text
+        )
+    )
+
+
+    combined = merge_skills(
+        local_skills,
+        gemini_skills
+    )
+
+
+    logger.info(
+
+        "Resume skills extracted: %s",
+
+        combined,
+
+    )
+
+
+    return combined[:40]
+
+
+# ---------------------------------------------------------
+# Skill merging
+# ---------------------------------------------------------
+
+def merge_skills(
+    existing: List[str] | None,
+    new_skills: List[str] | None,
+) -> List[str]:
+    """
+    Merge two skill arrays and remove duplicates
+    case-insensitively.
+    """
+
+    existing = (
+        existing
+        or []
+    )
+
+    new_skills = (
+        new_skills
+        or []
+    )
+
+
+    seen = set()
+
+    merged = []
+
+
+    for skill in [
+        *existing,
+        *new_skills,
+    ]:
+
+        if not skill:
+
+            continue
+
+
+        clean = (
+            skill
+            .strip()
+        )
+
+
+        if not clean:
+
+            continue
+
+
+        key = clean.lower()
+
+
+        if key in seen:
+
+            continue
+
+
+        seen.add(
+            key
+        )
+
+        merged.append(
+            clean
+        )
+
+
     return merged

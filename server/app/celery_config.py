@@ -1,57 +1,121 @@
-import os
 from celery import Celery
 from celery.schedules import crontab
 
-# Initialize Celery app
+from app.core.config import settings
+
+
 celery_app = Celery(
-    "AutomationDB",
-    broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
-    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0"),
+    "CareerSync",
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
 )
 
-# Celery configuration
+
 celery_app.conf.update(
-    # Task routing & execution
+
+    # -----------------------------------------------------
+    # Serialization
+    # -----------------------------------------------------
+
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    timezone="UTC",
+
+    # -----------------------------------------------------
+    # Timezone
+    # -----------------------------------------------------
+
+    timezone="Asia/Kolkata",
     enable_utc=True,
-    
-    # Task timeout (30 min for scraping tasks)
+
+    # -----------------------------------------------------
+    # Worker settings
+    # -----------------------------------------------------
+
     task_time_limit=30 * 60,
     task_soft_time_limit=28 * 60,
-    
-    # Retry configuration
+
+    worker_prefetch_multiplier=1,
+
+    task_acks_late=True,
+
+    # -----------------------------------------------------
+    # Retry
+    # -----------------------------------------------------
+
     task_autoretry_for=(Exception,),
     task_max_retries=3,
-    task_default_retry_delay=60,  # 1 min between retries
-    
-    # Result backend settings
-    result_expires=3600,  # Results live 1 hour
-    
-    # Beat schedule (periodic tasks)
+    task_default_retry_delay=60,
+
+    # -----------------------------------------------------
+    # Results
+    # -----------------------------------------------------
+
+    result_expires=3600,
+
+    # -----------------------------------------------------
+    # CELERY BEAT
+    #
+    # Global scraping only.
+    # No user-specific scraping.
+    # -----------------------------------------------------
+
     beat_schedule={
-        # Scrape jobs every 30 minutes (continuous scraping while running)
-        "scrape-jobs-continuously": {
-            "task": "app.tasks.scrape_all_skills_task",
-            "schedule": 30 * 60,  # 30 minutes in seconds
-            "options": {"queue": "default"},
+
+        # ---------------------------------------------
+        # Every day at 1:00 AM IST
+        # ---------------------------------------------
+
+        "global-job-scrape-daily": {
+
+            "task":
+                "app.tasks.scrape_all_skills_task",
+
+            "schedule":
+                crontab(
+                    hour=00,
+                    minute=20,
+                ),
+
+            # "options": {
+            #     "queue": "default"
+            # },
         },
-        # Cleanup expired jobs daily at 2 AM UTC
+
+
+        # ---------------------------------------------
+        # Every day at 2:00 AM IST
+        #
+        # Delete jobs whose expires_at has passed.
+        # ---------------------------------------------
+
         "cleanup-expired-jobs-daily": {
-            "task": "app.tasks.cleanup_expired_jobs_task",
-            "schedule": crontab(hour=2, minute=0),  # 2 AM UTC daily
-            "options": {"queue": "default"},
+
+            "task":
+                "app.tasks.cleanup_expired_jobs_task",
+
+            "schedule":
+                crontab(
+                    hour=2,
+                    minute=0,
+                ),
+
+            # "options": {
+            #     "queue": "default"
+            # },
         },
     },
 )
 
-# Task auto-discovery (searches for tasks in app modules)
-celery_app.autodiscover_tasks(["app"])
+
+celery_app.autodiscover_tasks(
+    ["app"]
+)
 
 
 @celery_app.task(bind=True)
 def debug_task(self):
-    """Debug task for testing Celery setup."""
-    print(f"Request: {self.request!r}")
+
+    print(
+        f"Request: {self.request!r}"
+    )

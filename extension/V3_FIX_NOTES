@@ -1,0 +1,9 @@
+CareerSync Semantic Autofill V3 fixes
+
+1. Cleans ATS labels so <select> option lists do not become part of the question.
+2. Prefers clean DOM/ARIA labels over polluted scanner labels.
+3. Keeps long option lists out of semantic context.
+4. A profile/memory value that cannot be inserted into a choice field is passed to AI for semantic adaptation instead of being treated as an extension error.
+5. Duplicate Autofill clicks are ignored instead of reported as an error.
+
+Replace extension/content/content.js with the included file, reload the extension, and refresh the job form. Backend files are included unchanged for convenience.
