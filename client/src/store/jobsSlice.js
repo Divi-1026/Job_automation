@@ -73,7 +73,9 @@ export const autoApply = createAsyncThunk(
 const jobsSlice = createSlice({
   name: 'jobs',
   initialState: {
-    items: [],          // jobs array
+    items: [],  
+    rankedItems: [],
+  rankingLoaded: false,        // jobs array
     total: 0,
     skip: 0,
     limit: 500,
@@ -90,6 +92,10 @@ const jobsSlice = createSlice({
     clearScrapeMsg(state) { state.scrapeMsg = null },
     clearAutoApplyMsg(state) { state.autoApplyMsg = null },
     clearError(state) { state.error = null },
+    clearRankedJobs(state) {
+    state.rankedItems = []
+    state.rankingLoaded = false
+  },
   },
   extraReducers: (builder) => {
     // fetchJobs
@@ -98,6 +104,8 @@ const jobsSlice = createSlice({
       .addCase(fetchJobs.fulfilled, (s, a) => {
         s.loading = false
         s.items = a.payload.jobs || []
+        s.rankedItems = a.payload.jobs || []
+s.rankingLoaded = true
         s.total = a.payload.total || 0
         s.skip = a.payload.skip || 0
         s.limit = a.payload.limit || 20
@@ -148,5 +156,5 @@ const jobsSlice = createSlice({
   },
 })
 
-export const { clearScrapeMsg, clearAutoApplyMsg, clearError: clearJobsError } = jobsSlice.actions
+export const { clearScrapeMsg, clearAutoApplyMsg, clearError: clearJobsError,clearRankedJobs } = jobsSlice.actions
 export default jobsSlice.reducer

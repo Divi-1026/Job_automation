@@ -230,7 +230,7 @@ export default function About() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-400">CareerSync</p>
-                  <h3 className="mt-1 font-semibold text-slate-800">
+                  <h3 className="mt-1 font-semibold text-slate-5000">
                     Smarter job workflow
                   </h3>
                 </div>

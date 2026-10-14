@@ -33,7 +33,175 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 
+const dummyJobs = [
+  {
+    id: 'dummy-1',
+    title: 'React JS Developer (third Party Payroll)',
+    company: 'Crisil',
+    location: 'Mumbai',
+    salary: null,
+    description:
+      'We are looking for a Front-End Developer who is motivated to combine the art of design with the art of programming. Building and implementing top-notch user interfaces using JavaScript and the React framework. Good understanding of React.js, Next.js and design frameworks.',
+    url: '#',
+    source: 'naukri',
+    skill_query: 'React.js',
+    scraped_at: '2026-10-07 09:48:49',
+    confidence_score: 68,
+    application_status: null,
+    applied: false,
+  },
 
+  {
+    id: 'dummy-2',
+    title: 'React Native Development',
+    company: 'Pinkmoon Technologies',
+    location: 'Vijayawada',
+    salary: '₹ 7,500 - 10,000 /month',
+    description:
+      'Required / Key Skills: Node.js, React Native',
+    url: '#',
+    source: 'internshala',
+    skill_query: 'React.js',
+    scraped_at: '2026-10-07 09:48:52',
+    confidence_score: 64,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-3',
+    title: 'Mechanical Engineer',
+    company: 'Smartenviro Systems Private Limited',
+    location: 'Pune',
+    salary: null,
+    description:
+      'Required / Key Skills: AutoCAD, Autodesk Fusion 360, Catia, SolidWorks',
+    url: '#',
+    source: 'internshala',
+    skill_query: 'AI Engineer',
+    scraped_at: '2026-10-07 10:08:00',
+    confidence_score: 62,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-4',
+    title: 'Outbound Sales Representative',
+    company: 'Jaipur SEO Company',
+    location: 'Jaipur',
+    salary: null,
+    description:
+      'Required / Key Skills: Copywriting, Data Extraction, Effective Communication, Email Marketing, Lead Generation, LinkedIn Marketing, Research and Analytics',
+    url: '#',
+    source: 'internshala',
+    skill_query: 'Data Scientist',
+    scraped_at: '2026-10-07 10:08:23',
+    confidence_score: 58,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-5',
+    title: 'Data Scientist',
+    company: 'Applied Generative Solutions',
+    location: 'Work from home',
+    salary: null,
+    description:
+      'Required / Key Skills: Data Analytics, Data Science, Machine Learning, Python, SQL',
+    url: '#',
+    source: 'internshala',
+    skill_query: 'Data Scientist',
+    scraped_at: '2026-10-07 10:08:29',
+    confidence_score: 91,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-6',
+    title: 'Full Stack Data Developer Database,Python & Migration',
+    company: 'Crisil',
+    location: 'Mumbai',
+    salary: null,
+    description:
+      'Design, develop and maintain relational and non-relational databases. Strong proficiency in PostgreSQL, MySQL, Oracle, SQL Server and MongoDB. Develop ETL pipelines using SQL and Python.',
+    url: '#',
+    source: 'naukri',
+    skill_query: 'MongoDB',
+    scraped_at: '2026-10-07 10:06:54',
+    confidence_score: 86,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-7',
+    title: 'Associate Business Analyst',
+    company: 'RoaDo',
+    location: 'Bangalore',
+    salary: null,
+    description:
+      'Required / Key Skills: Data Analytics, MongoDB, Python, Research and Analytics, SQL',
+    url: '#',
+    source: 'internshala',
+    skill_query: 'MongoDB',
+    scraped_at: '2026-10-07 10:10:39',
+    confidence_score: 79,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-8',
+    title: 'Senior Data Engineer',
+    company: 'Walmart',
+    location: 'Sunnyvale, CA 94089 (Lakewood area)',
+    salary: null,
+    description: 'Senior Data Engineer job opportunity.',
+    url: '#',
+    source: 'indeed',
+    skill_query: 'Next.js',
+    scraped_at: '2026-10-07 10:13:07',
+    confidence_score: 83,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-9',
+    title: 'AI Security Engineer, AWS Security - AISec',
+    company: 'Amazon.com Services LLC',
+    location: 'Austin, TX',
+    salary: null,
+    description: 'AI Security Engineer role focused on AWS Security.',
+    url: '#',
+    source: 'indeed',
+    skill_query: 'AWS',
+    scraped_at: '2026-10-07 10:14:46',
+    confidence_score: 89,
+    application_status: null,
+    applied: false,
+  },
+
+  {
+    id: 'dummy-10',
+    title: 'Associate Creative Designer',
+    company: 'Redwood Algorithms',
+    location: 'Bangalore',
+    salary: null,
+    description:
+      'Required / Key Skills: Adobe Creative Suite, AI Video Generation, Canva, Generative AI Tools, Storyboarding, UI & UX Design, Wix, WordPress',
+    url: '#',
+    source: 'internshala',
+    skill_query: 'Generative AI Engineer',
+    scraped_at: '2026-10-07 10:08:35',
+    confidence_score: 76,
+    application_status: null,
+    applied: false,
+  },
+]
 const SOURCES = [
   {
     key: 'all',
@@ -3057,29 +3225,469 @@ export default function Jobs() {
           loading &&
           items.length === 0
             ? (
+              <div>
+<div
+              className="
+                mb-5
+                bg-white
+                border
+                border-[#e2e2ed]
+                rounded-2xl
+                p-5
+                shadow-sm
+              "
+            >
 
-                <div
-                  className="
-                    flex
-                    justify-center
-                    py-32
-                  "
-                >
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  mb-4
+                "
+              >
+                <SlidersHorizontal
+                  size={17}
+                  className="text-[#10B981]"
+                />
+
+                <div>
+                  <h3
+                    className="
+                      text-sm
+                      text-[#0f0f1a]
+                    "
+                    style={{
+                      fontFamily:
+                        'EuclidSB, sans-serif'
+                    }}
+                  >
+                    Auto-Apply Filters
+                  </h3>
+
+                  <p
+                    className="
+                      text-xs
+                      text-[#8a8a9d]
+                      mt-0.5
+                    "
+                  >
+                    These filters are applied before Naukri auto-apply.
+                  </p>
+                </div>
+              </div>
+
+
+              <div
+                className="
+                  grid
+                  sm:grid-cols-2
+                  lg:grid-cols-4
+                  xl:grid-cols-7
+                  gap-3
+                "
+              >
+
+                <label className="block">
+                  <span
+                    className="
+                      text-xs
+                      text-[#6b6b80]
+                    "
+                  >
+                    Number of jobs
+                  </span>
+
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={maxApplies}
+                    onChange={e =>
+                      setMaxApplies(
+                        e.target.value
+                      )
+                    }
+                    className="
+                      mt-1.5
+                      w-full
+                      px-3
+                      py-2.5
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      bg-white
+                      text-sm
+                      text-[#0f0f1a]
+                      placeholder:text-[#a0a0b0]
+                      outline-none
+                      focus:border-[#10B981]
+                    "
+                  />
+                </label>
+
+
+                <label className="block">
+                  <span
+                    className="
+                      text-xs
+                      text-[#6b6b80]
+                    "
+                  >
+                    Minimum salary
+                  </span>
 
                   <div
                     className="
-                      w-10
-                      h-10
-                      rounded-full
-                      border-2
-                      border-[#10B981]
-                      border-t-transparent
-                      animate-spin
+                      mt-1.5
+                      flex
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      overflow-hidden
+                      focus-within:border-[#10B981]
+                    "
+                  >
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder={
+                        salaryUnit === 'lpa'
+                          ? 'e.g. 3'
+                          : 'e.g. 30000'
+                      }
+                      value={minSalary}
+                      onChange={e =>
+                        setMinSalary(
+                          e.target.value
+                        )
+                      }
+                      className="
+                        min-w-0
+                        flex-1
+                        px-3
+                        py-2.5
+                        text-sm
+                        text-[#0f0f1a]
+                        placeholder:text-[#a0a0b0]
+                        outline-none
+                      "
+                    />
+
+                    <select
+                      value={salaryUnit}
+                      onChange={e =>
+                        setSalaryUnit(
+                          e.target.value
+                        )
+                      }
+                      className="
+                        border-l
+                        border-[#e2e2ed]
+                        px-2
+                        text-xs
+                        text-[#0f0f1a]
+                        bg-[#f8f8fb]
+                        outline-none
+                      "
+                    >
+                      <option value="lpa">
+                        LPA
+                      </option>
+                      <option value="monthly">
+                        / month
+                      </option>
+                    </select>
+                  </div>
+                </label>
+
+
+                <label className="block">
+                  <span
+                    className="
+                      text-xs
+                      text-[#6b6b80]
+                    "
+                  >
+                    Location
+                  </span>
+
+                  <input
+                    type="text"
+                    placeholder="e.g. Bangalore"
+                    value={locationFilter}
+                    onChange={e =>
+                      setLocationFilter(
+                        e.target.value
+                      )
+                    }
+                    className="
+                      mt-1.5
+                      w-full
+                      px-3
+                      py-2.5
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      bg-white
+                      text-sm
+                      text-[#0f0f1a]
+                      placeholder:text-[#a0a0b0]
+                      outline-none
+                      focus:border-[#10B981]
                     "
                   />
+                </label>
 
-                </div>
 
+                <label className="block">
+                  <span
+                    className="
+                      text-xs
+                      text-[#6b6b80]
+                    "
+                  >
+                    Minimum match %
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="e.g. 50"
+                    value={minMatch}
+                    onChange={e =>
+                      setMinMatch(
+                        e.target.value
+                      )
+                    }
+                    className="
+                      mt-1.5
+                      w-full
+                      px-3
+                      py-2.5
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      bg-white
+                      text-sm
+                      text-[#0f0f1a]
+                      placeholder:text-[#a0a0b0]
+                      outline-none
+                      focus:border-[#10B981]
+                    "
+                  />
+                </label>
+
+
+                <label className="block">
+                  <span
+                    className="
+                      text-xs
+                      text-[#6b6b80]
+                    "
+                  >
+                    Role / skill
+                  </span>
+
+                  <input
+                    type="text"
+                    placeholder="e.g. React"
+                    value={searchFilter}
+                    onChange={e =>
+                      setSearchFilter(
+                        e.target.value
+                      )
+                    }
+                    className="
+                      mt-1.5
+                      w-full
+                      px-3
+                      py-2.5
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      bg-white
+                      text-sm
+                      text-[#0f0f1a]
+                      placeholder:text-[#a0a0b0]
+                      outline-none
+                      focus:border-[#10B981]
+                    "
+                  />
+                </label>
+
+
+                <label className="block">
+                  <span className="text-xs text-[#6b6b80]">
+                    Experience
+                  </span>
+
+                  <select
+                    value={experienceFilter}
+                    onChange={e =>
+                      setExperienceFilter(e.target.value)
+                    }
+                    className="
+                      mt-1.5
+                      w-full
+                      px-3
+                      py-2.5
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      bg-white
+                      text-sm
+                      text-[#0f0f1a]
+                      outline-none
+                      focus:border-[#10B981]
+                    "
+                  >
+                    <option value="all">All experience</option>
+                    <option value="fresher">Fresher / 0-1 yr</option>
+                    <option value="1-3">1-3 years</option>
+                    <option value="3-5">3-5 years</option>
+                    <option value="5+">5+ years</option>
+                  </select>
+                </label>
+
+
+                <label className="block">
+                  <span className="text-xs text-[#6b6b80]">
+                    Job type
+                  </span>
+
+                  <select
+                    value={jobTypeFilter}
+                    onChange={e =>
+                      setJobTypeFilter(e.target.value)
+                    }
+                    className="
+                      mt-1.5
+                      w-full
+                      px-3
+                      py-2.5
+                      rounded-xl
+                      border
+                      border-[#e2e2ed]
+                      bg-white
+                      text-sm
+                      text-[#0f0f1a]
+                      outline-none
+                      focus:border-[#10B981]
+                    "
+                  >
+                    <option value="all">All job types</option>
+                    <option value="internship">Internship</option>
+                    <option value="full_time">Full-time</option>
+                  </select>
+                </label>
+
+
+              </div>
+
+
+              <div
+                className="
+                  mt-4
+                  flex
+                  items-center
+                  justify-between
+                  gap-3
+                  flex-wrap
+                "
+              >
+
+                {/* <p
+                  className="
+                    text-xs
+                    text-[#6b6b80]
+                  "
+                > */}
+                  {/* <span
+                    style={{
+                      fontFamily:
+                        'EuclidSB, sans-serif'
+                    }}
+                  >
+                    {unappliedNaukriCount}
+                  </span> */}
+                  {' '}Naukri +{' '}
+                  {/* <span
+                    style={{
+                      fontFamily:
+                        'EuclidSB, sans-serif'
+                    }}
+                  >
+                    {unappliedInternshalaCount}
+                  </span> */}
+                  {/* {' '}Internshala jobs match the current filters.
+                  {
+                    minSalary !== '' &&
+                    Number(minSalary) > 0
+                      ? ' Jobs with undisclosed salary are excluded.'
+                      : ''
+                  }
+                </p> */}
+
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMaxApplies(5)
+                    setMinSalary('')
+                    setSalaryUnit('lpa')
+                    setLocationFilter('')
+                    setMinMatch('')
+                    setSearchFilter('')
+                    setExperienceFilter('all')
+                    setJobTypeFilter('all')
+                    setFilterError('')
+                  }}
+                  className="
+                    text-xs
+                    px-3
+                    py-2
+                    rounded-lg
+                    border
+                    border-[#ec1906]
+                    text-[#6b6b80]
+                    hover:text-[#d72219]
+                    hover:border-[#840303]
+                    transition-colors
+                  "
+                >
+                  Clear Filters
+                </button>
+
+              </div>
+
+
+              {
+                filterError && (
+                  <p
+                    className="
+                      mt-3
+                      text-xs
+                      text-red-600
+                    "
+                  >
+                    {filterError}
+                  </p>
+                )
+              }
+
+            </div>
+               <div className="grid grid-cols-1 gap-4">
+          {dummyJobs.map(job => (
+            <JobCard
+              key={job.id}
+              job={job}
+            />
+          ))}
+        </div>
+</div>
               )
 
             : items.length === 0

@@ -399,7 +399,99 @@ def extract_skills_locally(
         [],
         detected
     )
+def extract_relevant_sections(resume_text: str) -> dict:
+    """
+    Extract Skills, Projects and Experience sections
+    from resume text for semantic job matching.
+    """
 
+    if not resume_text:
+        return {
+            "skills": "",
+            "projects": "",
+            "experience": "",
+        }
+
+    lines = [
+        line.strip()
+        for line in resume_text.splitlines()
+        if line.strip()
+    ]
+
+    section_aliases = {
+        "skills": {
+            "skills",
+            "technical skills",
+            "technical expertise",
+            "technologies",
+            "core skills",
+            "key skills",
+        },
+        "projects": {
+            "projects",
+            "personal projects",
+            "academic projects",
+            "key projects",
+            "major projects",
+        },
+        "experience": {
+            "experience",
+            "work experience",
+            "professional experience",
+            "employment",
+            "internship",
+            "internships",
+        },
+    }
+
+    all_headings = set()
+
+    for aliases in section_aliases.values():
+        all_headings.update(
+            alias.lower()
+            for alias in aliases
+        )
+
+    sections = {
+        "skills": [],
+        "projects": [],
+        "experience": [],
+    }
+
+    current_section = None
+
+    for line in lines:
+
+        normalized = re.sub(
+            r"[:\-]+$",
+            "",
+            line.strip()
+        ).strip().lower()
+
+        found_section = None
+
+        for section_name, aliases in section_aliases.items():
+            if normalized in aliases:
+                found_section = section_name
+                break
+
+        if found_section:
+            current_section = found_section
+            continue
+
+        # Stop collecting when another known resume
+        # section starts.
+        if normalized in all_headings:
+            current_section = None
+            continue
+
+        if current_section:
+            sections[current_section].append(line)
+
+    return {
+        key: "\n".join(value).strip()
+        for key, value in sections.items()
+    }
 
 # ---------------------------------------------------------
 # Gemini skill extraction
@@ -610,8 +702,6 @@ def merge_skills(
         if key in seen:
 
             continue
-
-
         seen.add(
             key
         )

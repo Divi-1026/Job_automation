@@ -16,7 +16,7 @@ DEFAULT_SKILLS = [
     "Python", "JavaScript", "Java", "React", "Node.js", "Django",
     "AWS", "Docker", "SQL", "Machine Learning"
 ]
-JOBS_PER_SKILL = 50
+JOBS_PER_SKILL = 5
 SCRAPE_INTERVAL = 30 * 60  # 30 minutes
 
 async def save_jobs(jobs: List[dict]) -> int:

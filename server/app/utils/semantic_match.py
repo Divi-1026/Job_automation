@@ -410,9 +410,9 @@ def calculate_match_details(
     role = _role_alignment(resume_text, job_text)
 
     final = (
-        0.55 * coverage
-        + 0.30 * semantic
-        + 0.00 * evidence
+        0.35 * coverage
+        + 0.50 * semantic
+        
         + 0.15 * role
     )
 

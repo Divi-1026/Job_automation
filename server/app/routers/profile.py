@@ -274,7 +274,8 @@ async def upload_resume(
     ),
 
     db: AsyncSession = Depends(get_db),
-):
+):  
+    print("🔥🔥🔥 upload_resume CALLED 🔥🔥🔥", flush=True)
     if file.content_type not in {
         "application/pdf",
         "application/x-pdf",
@@ -310,9 +311,10 @@ async def upload_resume(
     from app.utils.resume_processor import (
         extract_text_from_pdf,
         extract_skills_from_text,
+        extract_relevant_sections,
         merge_skills,
     )
-
+   
     from app.utils.semantic_match import (
         create_embedding,
     )
@@ -369,11 +371,29 @@ async def upload_resume(
     # ---------------------------------------------
     # Generate semantic embedding ONCE
     # ---------------------------------------------
+    sections = extract_relevant_sections(resume_text)
+    matching_text = f"""
+     Skills:
+     {", ".join(extracted_skills)}
+ 
+      Projects:
+      {sections["projects"]}
+ 
+      Experience:
+      {sections["experience"]}
+       """
+    print("\n========== EXTRACTED SKILLS ==========")
+    print(extracted_skills)
 
+    print("\n========== PROJECTS ==========")
+    print(sections["projects"])
+
+    print("\n========== EXPERIENCE ==========")
+    print(sections["experience"])
     try:
         resume_embedding = (
             create_embedding(
-                resume_text
+                matching_text
             )
         )
 
@@ -389,7 +409,11 @@ async def upload_resume(
             ),
         ) from exc
 
-
+    logger.warning(
+    "\n========== TEXT USED FOR EMBEDDING ==========\n%s",
+    matching_text
+    )
+    
     # create_embedding may return numpy array
     if hasattr(
         resume_embedding,

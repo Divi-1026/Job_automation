@@ -42,7 +42,7 @@ Sort DESC
 import asyncio
 import logging
 import re
-
+import uuid
 from datetime import datetime
 
 from fastapi import (
@@ -86,6 +86,7 @@ from app.utils.semantic_match import (
 from app.utils.encryption import (
     decrypt_password,
 )
+from app.models.user_job_match import UserJobMatch
 
 
 
@@ -372,22 +373,45 @@ async def list_jobs(
                     job.embedding
                 )
                 embedding_source = "already stored in database"
+            existing_match = await db.execute(
+              select(UserJobMatch).where(
+              UserJobMatch.user_id == user_id_str,
+              UserJobMatch.job_id == str(job.id),
+             )
+           )
 
-            details = calculate_match_details(
-                resume_embedding=current_user.resume_embedding,
-                job_embedding=job_embedding,
-                user_skills=current_user.skills or [],
-                job_text=job_text,
-                resume_text=current_user.resume_text or "",
-            )
-            confidence_score = float(details["score"])
+            match_record = existing_match.scalars().first()
+            if match_record:
+               confidence_score = float(match_record.match_score)
+               print("Already Calculate")
 
-            _print_matching_debug(
-                platform=(job.source or "jobs"),
-                job=job,
-                details=details,
-                embedding_source=embedding_source,
-            )
+            else:
+               details = calculate_match_details(
+                   resume_embedding=current_user.resume_embedding,
+                   job_embedding=job_embedding,
+                   user_skills=current_user.skills or [],
+                   job_text=job_text,
+                   resume_text=current_user.resume_text or "",
+                )
+               _print_matching_debug(
+                                platform=(job.source or "jobs"),
+                                job=job,
+                                details=details,
+                                embedding_source=embedding_source,
+                            )
+
+               confidence_score = float(details["score"])
+
+               match_record = UserJobMatch(
+                 id=str(uuid.uuid4()),
+                 user_id=user_id_str,
+                 job_id=str(job.id),
+                 match_score=confidence_score,
+                 created_at=datetime.utcnow(),
+               )
+
+            db.add(match_record)
+            
 
             if (
                 confidence_score

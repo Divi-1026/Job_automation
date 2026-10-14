@@ -285,25 +285,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#f5f5fa]" style={{ fontFamily: 'EuclidR, sans-serif' }}>
 
-      <header className="sticky top-0 z-50 border-b border-[#e2e2ed] bg-white/90 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="text-xl text-[#0f0f1a]" style={{ fontFamily: 'EuclidB, sans-serif' }}>
-              Carrer<span className="text-[#10B981]">Sync </span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link to="/dashboard"
-              className="flex items-center gap-1.5 text-sm text-[#6b6b80] hover:text-[#0f0f1a] transition-colors">
-              <ArrowLeft size={15} strokeWidth={2} /> Dashboard
-            </Link>
-            <button onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[#6b6b80] hover:text-[#ef4444] hover:bg-[#ef4444]/[0.06] border border-transparent hover:border-[#ef4444]/20 transition-all duration-200">
-              <LogOut size={15} /> Log out
-            </button>
-          </div>
-        </div>
-      </header>
+      
 
       <div className="max-w-3xl mx-auto px-6 py-12 flex flex-col gap-6">
 
@@ -482,7 +464,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="text-sm text-[#0f0f1a]" style={{ fontFamily: 'EuclidSB, sans-serif' }}>Current resume</p>
-                  <a href={`http://127.0.0.1:8000${user.resume_url}`} target="_blank" rel="noreferrer"
+                  <a href={`http://127.0.0.1:5000${user.resume_url}`} target="_blank" rel="noreferrer"
                     className="flex items-center gap-1 text-xs text-[#10B981] hover:text-[#059669] hover:underline transition-colors">
                     View PDF <ExternalLink size={11} strokeWidth={2} />
                   </a>

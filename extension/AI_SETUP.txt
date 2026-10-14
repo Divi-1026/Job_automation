@@ -32,10 +32,10 @@ Restart/test:
 -------------
 PowerShell 1:
 cd C:\Users\Lenovo\job_automation\server
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 5000
 
 Then open:
-http://127.0.0.1:8000/docs
+http://127.0.0.1:5000/docs
 
 You should see:
 POST /extension/ai/suggest-batch

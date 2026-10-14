@@ -564,7 +564,7 @@ async def scrape_one_skill_indeed(
             if await _page_is_blocked(page):
 
                 logger.warning(
-                    "[Indeed] Indeed blocked/challenged the browser "
+                    "[Indeed] Indeed blocked/challenged the browser but continue "
                     "for skill '%s'.",
                     skill,
                 )
@@ -577,7 +577,7 @@ async def scrape_one_skill_indeed(
                 except Exception:
                     pass
 
-                break
+                
 
             # --------------------------------------------------
             # Cards
@@ -802,43 +802,30 @@ async def scrape_indeed(
     skills: list[str],
     max_per_skill: int = 10,
 ) -> list[dict]:
-    """
-    Standalone Indeed scraper.
-
-    Creates its own Firefox browser using the same browser factory
-    already used by the Naukri scraper.
-    """
-
-    from app.scrapers.naukri import _make_browser_page
 
     all_jobs: list[dict] = []
 
     async with async_playwright() as pw:
 
-        browser, page = await _make_browser_page(
-            pw
+        browser = await pw.firefox.launch(
+            headless=False
         )
 
-        try:
+        page = await browser.new_page()
 
+        try:
             for skill in skills:
 
                 try:
-
-                    jobs = (
-                        await scrape_one_skill_indeed(
-                            skill=skill,
-                            max_jobs=max_per_skill,
-                            page=page,
-                        )
+                    jobs = await scrape_one_skill_indeed(
+                        skill=skill,
+                        max_jobs=max_per_skill,
+                        page=page,
                     )
 
-                    all_jobs.extend(
-                        jobs
-                    )
+                    all_jobs.extend(jobs)
 
                 except Exception as exc:
-
                     logger.exception(
                         "[Indeed] Failed skill '%s': %s",
                         skill,
@@ -853,7 +840,6 @@ async def scrape_indeed(
                 )
 
         finally:
-
             await browser.close()
 
     logger.info(

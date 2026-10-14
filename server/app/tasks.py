@@ -33,19 +33,42 @@ from app.models.job import Job
 from app.scrapers.naukri import scrape_naukri
 from app.scrapers.internshala import scrape_internshala
 from app.utils.semantic_match import create_embedding
+from app.scrapers.indeed import scrape_indeed
 
 
 logger = logging.getLogger(__name__)
 
 
 DEFAULT_SKILLS = [
+    # Core Engineering Roles
+    "Software Engineer",
+    "Software Developer",
+    # AI & Machine Learning Roles
+    "AI Engineer",
+    "Machine Learning Engineer",
+    "Data Scientist",
+    "Generative AI Engineer",
+    "Deep Learning",
+    "NLP Engineer",
+   
+    # Frontend
     "React.js",
-    "Express.js",
+    "Next.js",
+    "TypeScript",
     "Frontend Developer",
+    # Backend & Full Stack
+    "Node.js",
+    "Express.js",
+    "Full Stack Developer",
     "Backend Developer",
+    # Databases & DevOps/Cloud
+    "MongoDB",
+    "PostgreSQL",
+    "Docker",
+    "AWS",
 ]
 
-JOBS_PER_SKILL = 3
+JOBS_PER_SKILL = 2
 DELAY_BETWEEN_PLATFORMS = 2
 
 
@@ -72,6 +95,7 @@ async def _scrape_all_platforms() -> List[dict]:
     for platform_name, scraper in (
         ("naukri", scrape_naukri),
         ("internshala", scrape_internshala),
+        ("indeed", scrape_indeed),
     ):
         try:
             logger.info(
@@ -282,21 +306,43 @@ def scrape_all_skills_task(self):
 async def _cleanup_expired_jobs_async() -> dict:
     async with AsyncSessionLocal() as session:
         now = datetime.utcnow()
+
+        # Pehle expired jobs nikalo
         result = await session.execute(
-            delete(Job)
-            .where(Job.expires_at < now)
-            .returning(Job.id)
+            select(Job).where(Job.expires_at < now)
         )
-        deleted = result.scalars().all()
+
+        expired_jobs = result.scalars().all()
+
+        # Deleted jobs print/log karo
+        for job in expired_jobs:
+            logger.info(
+                "DELETING EXPIRED JOB | id=%s | title=%s | company=%s | expires_at=%s | url=%s",
+                job.id,
+                job.title,
+                job.company,
+                job.expires_at,
+                job.url,
+            )
+            print(
+                f"DELETING: {job.title} | "
+                f"{job.company} | "
+                f"expires_at={job.expires_at} | "
+                f"url={job.url}"
+            )
+
+        # Ab delete karo
+        await session.execute(
+            delete(Job).where(Job.expires_at < now)
+        )
+
         await session.commit()
 
         return {
             "status": "success",
-            "deleted": len(deleted),
+            "deleted": len(expired_jobs),
             "timestamp": now.isoformat(),
         }
-
-
 @celery_app.task(name="app.tasks.cleanup_expired_jobs_task")
 def cleanup_expired_jobs_task():
     return asyncio.run(_cleanup_expired_jobs_async())
