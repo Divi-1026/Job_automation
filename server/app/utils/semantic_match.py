@@ -30,12 +30,20 @@ from __future__ import annotations
 import re
 from typing import Iterable, Sequence
 
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-_model = SentenceTransformer(MODEL_NAME)
+_model = None
+
+def get_model():
+    global _model
+
+    if _model is None:
+        _model = SentenceTransformer(MODEL_NAME)
+
+    return _model
 
 
 SKILL_ALIASES: dict[str, tuple[str, ...]] = {
@@ -203,7 +211,7 @@ def create_embedding(text: str) -> list[float]:
     if not text:
         return []
 
-    vector = _model.encode(
+    vector = get_model().encode(
         text,
         normalize_embeddings=True,
         show_progress_bar=False,

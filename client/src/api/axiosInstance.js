@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000',
+  baseURL: import.meta.env.VITE_API_BASE_URL ,
   // Do NOT set Content-Type here — axios sets it automatically:
   //   application/json  for plain objects
   //   multipart/form-data (with boundary) for FormData

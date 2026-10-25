@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     FERNET_KEY: str
 
     # Celery / Redis
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    CELERY_BROKER_URL: str 
+    CELERY_RESULT_BACKEND: str 
 
     # Groq
     GROQ_API_KEY: str | None = None

@@ -464,7 +464,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="text-sm text-[#0f0f1a]" style={{ fontFamily: 'EuclidSB, sans-serif' }}>Current resume</p>
-                  <a href={`http://127.0.0.1:5000${user.resume_url}`} target="_blank" rel="noreferrer"
+                  <a href={`${import.meta.env.VITE_API_BASE_URL}${user.resume_url}`} target="_blank" rel="noreferrer"
                     className="flex items-center gap-1 text-xs text-[#10B981] hover:text-[#059669] hover:underline transition-colors">
                     View PDF <ExternalLink size={11} strokeWidth={2} />
                   </a>
