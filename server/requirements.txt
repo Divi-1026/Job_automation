@@ -1,54 +1,20 @@
-# fastapi
-# uvicorn[standard]
-
-# sqlalchemy[asyncio]
-# asyncpg
-# greenlet
-# alembic
-
-# pydantic[email]
-# pydantic-settings
-# python-dotenv
-
-# passlib[bcrypt]
-# bcrypt
-# python-jose[cryptography]
-# python-multipart
-# cryptography
-
-# PyPDF2
-
-# numpy
-# scikit-learn
-# sentence-transformers
-
-# httpx
-# beautifulsoup4
-# lxml
-
-# playwright
-# playwright-stealth
-
-# selenium
-# webdriver-manager
-# selenium-stealth
-
-# google-genai
-
-# fuzzywuzzy
-# python-Levenshtein
-
-# celery
-# redis
 fastapi
 uvicorn[standard]
 
 sqlalchemy[asyncio]
 asyncpg
-passlib[bcrypt]
-bcrypt==4.0.1
+greenlet
+alembic
+
 pydantic[email]
 pydantic-settings
+python-dotenv
+
+passlib[bcrypt]
+bcrypt
+python-jose[cryptography]
+python-multipart
+cryptography
 
 PyPDF2
 
@@ -60,4 +26,17 @@ httpx
 beautifulsoup4
 lxml
 
+playwright
+playwright-stealth
+
+selenium
+webdriver-manager
+selenium-stealth
+
 google-genai
+
+fuzzywuzzy
+python-Levenshtein
+
+celery
+redis
